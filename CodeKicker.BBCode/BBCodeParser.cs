@@ -1,8 +1,8 @@
-﻿using System;
+﻿using CodeKicker.BBCode.Core.SyntaxTree;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using CodeKicker.BBCode.Core.SyntaxTree;
 using System.Diagnostics;
+using System.Linq;
 
 namespace CodeKicker.BBCode.Core
 {
@@ -32,12 +32,12 @@ namespace CodeKicker.BBCode.Core
         public string TextNodeHtmlTemplate { get; private set; }
         public ErrorMode ErrorMode { get; private set; }
 
-        public virtual string ToHtml(string bbCode)
+        public virtual string ToHtml(string bbCode, string code = "")
         {
             if (bbCode == null) throw new ArgumentNullException("bbCode");
-            return ParseSyntaxTree(bbCode).ToHtml();
+            return ParseSyntaxTree(bbCode, code).ToHtml();
         }
-        public virtual SequenceNode ParseSyntaxTree(string bbCode)
+        public virtual SequenceNode ParseSyntaxTree(string bbCode, string code = "")
         {
             if (bbCode == null) throw new ArgumentNullException("bbCode");
 
@@ -48,10 +48,10 @@ namespace CodeKicker.BBCode.Core
             int end = 0;
             while (end < bbCode.Length)
             {
-                if (MatchTagEnd(bbCode, ref end, stack))
+                if (MatchTagEnd(bbCode, code, ref end, stack))
                     continue;
 
-                if (MatchStartTag(bbCode, ref end, stack))
+                if (MatchStartTag(bbCode, code, ref end, stack))
                     continue;
 
                 if (MatchTextNode(bbCode, ref end, stack))
@@ -81,11 +81,11 @@ namespace CodeKicker.BBCode.Core
             return rootNode;
         }
 
-        bool MatchTagEnd(string bbCode, ref int pos, Stack<SyntaxTreeNode> stack)
+        bool MatchTagEnd(string bbCode, string code, ref int pos, Stack<SyntaxTreeNode> stack)
         {
             int end = pos;
 
-            var tagEnd = ParseTagEnd(bbCode, ref end);
+            var tagEnd = ParseTagEnd(bbCode, code, ref end);
             if (tagEnd != null)
             {
                 while (true)
@@ -116,18 +116,10 @@ namespace CodeKicker.BBCode.Core
 
             return false;
         }
-        bool MatchStartTag(string bbCode, ref int pos, Stack<SyntaxTreeNode> stack)
+        bool MatchStartTag(string bbCode, string code, ref int pos, Stack<SyntaxTreeNode> stack)
         {
-            // Before we do *anything* - if the topmost node on the stack is marked as StopProcessing then
-            // don't match anything
-            var topmost = stack.Peek() as TagNode;
-            if (topmost != null && topmost.Tag.StopProcessing)
-            {
-                return false;
-            }
-
             int end = pos;
-            var tag = ParseTagStart(bbCode, ref end);
+            var tag = ParseTagStart(bbCode, code, ref end);
             if (tag != null)
             {
                 if (tag.Tag.EnableIterationElementBehavior)
@@ -207,13 +199,13 @@ namespace CodeKicker.BBCode.Core
                 currentNode.SubNodes.Add(newChild);
         }
 
-        TagNode ParseTagStart(string input, ref int pos)
+        TagNode ParseTagStart(string input, string code, ref int pos)
         {
             var end = pos;
 
             if (!ParseChar(input, ref end, '[')) return null;
 
-            var tagName = ParseName(input, ref end);
+            var tagName = ParseName(input, code, ref end);
             if (tagName == null) return null;
 
             var tag = Tags.SingleOrDefault(t => t.Name.Equals(tagName, StringComparison.OrdinalIgnoreCase));
@@ -221,7 +213,7 @@ namespace CodeKicker.BBCode.Core
 
             var result = new TagNode(tag);
 
-            var defaultAttrValue = ParseAttributeValue(input, ref end, tag.GreedyAttributeProcessing);
+            var defaultAttrValue = ParseAttributeValue(input, code, ref end, tag.GreedyAttributeProcessing);
             if (defaultAttrValue != null)
             {
                 var attr = tag.FindAttribute("");
@@ -232,10 +224,10 @@ namespace CodeKicker.BBCode.Core
             while (true)
             {
                 ParseWhitespace(input, ref end);
-                var attrName = ParseName(input, ref end);
+                var attrName = ParseName(input, code, ref end);
                 if (attrName == null) break;
 
-                var attrVal = ParseAttributeValue(input, ref end);
+                var attrVal = ParseAttributeValue(input, code, ref end);
                 if (attrVal == null && ErrorOrReturn("")) return null;
 
                 if (tag.Attributes == null && ErrorOrReturn("UnknownTag", tag.Name)) return null;
@@ -245,26 +237,26 @@ namespace CodeKicker.BBCode.Core
                 if (result.AttributeValues.ContainsKey(attr) && ErrorOrReturn("DuplicateAttribute", tagName, attrName)) return null;
                 result.AttributeValues.Add(attr, attrVal);
             }
-            if (!ParseChar(input, ref end, ']') && ErrorOrReturn("TagNotClosed", tagName)) return null;
+            if (!ParseChar(input, ref end, ']', code) && ErrorOrReturn("TagNotClosed", tagName)) return null;
 
             ParseWhitespace(input, ref end);
 
             pos = end;
             return result;
         }
-        string ParseTagEnd(string input, ref int pos)
+        string ParseTagEnd(string input, string code, ref int pos)
         {
             var end = pos;
 
             if (!ParseChar(input, ref end, '[')) return null;
             if (!ParseChar(input, ref end, '/')) return null;
 
-            var tagName = ParseName(input, ref end);
+            var tagName = ParseName(input, code, ref end);
             if (tagName == null) return null;
 
             ParseWhitespace(input, ref end);
 
-            if (!ParseChar(input, ref end, ']'))
+            if (!ParseChar(input, ref end, ']', code))
             {
                 if (ErrorMode == ErrorMode.ErrorFree) return null;
                 else throw new BBCodeParsingException("");
@@ -354,39 +346,53 @@ namespace CodeKicker.BBCode.Core
             return result == "" ? null : result;
         }
 
-        static string ParseName(string input, ref int pos)
+        static string ParseName(string input, string code, ref int pos)
         {
             int end = pos;
-            for (; end < input.Length && (char.ToLower(input[end]) >= 'a' && char.ToLower(input[end]) <= 'z' || (input[end]) >= '0' && (input[end]) <= '9' || input[end] == '*'); end++) ;
+            for (; end < input.Length && (char.ToLower(input[end]) >= 'a' && char.ToLower(input[end]) <= 'z' || (input[end]) >= '0' && (input[end]) <= '9' || input[end] == '*' || input[end] == '-'); end++) ;
+            //var start = end;
+            //if (start < input.Length && input[end] == ':')
+            //{
+            //    while (start < input.Length)
+            //    {
+            //        if ((input[start] == ':' && input.Substring(start + 1, code.Length) == code) ||
+            //            input[start] == '=')
+            //        {
+            //            break;
+            //        }
+            //        start++;
+            //    }
+            //}
+
             if (end - pos == 0) return null;
 
             var result = input.Substring(pos, end - pos);
+
             pos = end;
             return result;
         }
-        static string ParseAttributeValue(string input, ref int pos, bool greedyProcessing = false)
+        static string ParseAttributeValue(string input, string code, ref int pos, bool greedyProcessing = false)
         {
             var end = pos;
 
             if (end >= input.Length || input[end] != '=') return null;
             end++;
 
-            var endIndex = -1;
-
-            if (!greedyProcessing)
-            {
-                endIndex = input.IndexOfAny(" []".ToCharArray(), end);
-            }
-            else
-            {
-                endIndex = input.IndexOfAny("[]".ToCharArray(), end);
-            }
+            var endIndex = Math.Min(
+                input.IndexOfAny((greedyProcessing ? "[]" : " []").ToCharArray(), end), 
+                code.Length > 0 ? input.LastIndexOf(':') : int.MaxValue
+            );
 
             if (endIndex == -1) endIndex = input.Length;
+            var toAdd = 0;
+            if (endIndex < input.Length && input[endIndex] == ':' && input.Substring(endIndex + 1, code.Length) == code)
+            {
+                toAdd = code.Length + 1;
+            }
 
             var valStart = pos + 1;
             var result = input.Substring(valStart, endIndex - valStart);
-            pos = endIndex;
+            pos = endIndex + toAdd;
             return result;
         }
         static bool ParseWhitespace(string input, ref int pos)
@@ -439,8 +445,28 @@ namespace CodeKicker.BBCode.Core
             pos = end;
             return found;
         }
-        static bool ParseChar(string input, ref int pos, char c)
+        static bool ParseChar(string input, ref int pos, char c, string code = null)
         {
+            if (pos < input.Length && input[pos] == c)
+            {
+                pos++;
+                return true;
+            }
+            if (!string.IsNullOrEmpty(code))
+            {
+                while (pos < input.Length)
+                {
+                    if (input[pos] == ':' && input.Substring(pos + 1, code.Length) == code)
+                    {
+                        break;
+                    }
+                    pos++;
+                }
+                if (pos < input.Length && input[pos] == ':' && input.Substring(pos + 1, code.Length) == code)
+                {
+                    pos += code.Length + 1;
+                }
+            }
             if (pos >= input.Length || input[pos] != c) return false;
             pos++;
             return true;

@@ -6,10 +6,11 @@
     <PackageId>CodeKicker.BBCode.Core</PackageId>
     <Version>1.0.0-alpha</Version>
     <Authors>Costin Banu</Authors>
-    <Description>A fork of CodeKicker.BBCode meant to be used with the .NetCore framework</Description>
+    <Description>A fork of CodeKicker.BBCode meant to be used in .NET Core framework projects.</Description>
     <PackageProjectUrl>https://github.com/costinbanu/CodeKicker.BBCode.Core</PackageProjectUrl>
     <RepositoryUrl>https://github.com/costinbanu/CodeKicker.BBCode.Core</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
