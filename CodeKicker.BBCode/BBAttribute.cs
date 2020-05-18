@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace CodeKicker.BBCode
+namespace CodeKicker.BBCode.Core
 {
     public class BBAttribute
     {

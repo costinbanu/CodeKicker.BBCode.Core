@@ -1,11 +1,10 @@
-﻿using System;
+﻿using CodeKicker.BBCode.Core.SyntaxTree;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using CodeKicker.BBCode.SyntaxTree;
 
-namespace CodeKicker.BBCode
+namespace CodeKicker.BBCode.Core
 {
     public static class BBCode
     {

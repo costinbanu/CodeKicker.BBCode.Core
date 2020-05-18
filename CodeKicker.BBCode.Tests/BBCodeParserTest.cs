@@ -1,61 +1,53 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using CodeKicker.BBCode;
-using CodeKicker.BBCode.SyntaxTree;
-using Microsoft.Pex.Framework;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Xunit;
 
-namespace Tests2
+namespace CodeKicker.BBCode.Core.Tests
 {
-    [TestClass]
-    [PexClass(MaxRuns = 1000000000, MaxRunsWithoutNewTests = 1000000000, Timeout = 1000000000, MaxExecutionTreeNodes = 1000000000, MaxBranches = 1000000000, MaxWorkingSet = 1000000000, MaxConstraintSolverMemory = 1000000000, MaxStack = 1000000000, MaxConditions = 1000000000)]
     public partial class BBCodeParserTest
     {
-        [TestMethod]
+        [Fact]
         public void Test1()
         {
-            Assert.AreEqual("", BBEncodeForTest("", ErrorMode.Strict));
+            Assert.Equal("", BBEncodeForTest("", ErrorMode.Strict));
         }
 
-        [TestMethod]
+        [Fact]
         public void Test2()
         {
-            Assert.AreEqual("a", BBEncodeForTest("a", ErrorMode.Strict));
-            Assert.AreEqual(" a b c ", BBEncodeForTest(" a b c ", ErrorMode.Strict));
+            Assert.Equal("a", BBEncodeForTest("a", ErrorMode.Strict));
+            Assert.Equal(" a b c ", BBEncodeForTest(" a b c ", ErrorMode.Strict));
         }
 
-        [TestMethod]
+        [Fact]
         public void Test3()
         {
-            Assert.AreEqual("<b></b>", BBEncodeForTest("[b][/b]", ErrorMode.Strict));
+            Assert.Equal("<b></b>", BBEncodeForTest("[b][/b]", ErrorMode.Strict));
         }
 
-        [TestMethod]
+        [Fact]
         public void Test4()
         {
-            Assert.AreEqual("text<b>text</b>text", BBEncodeForTest("text[b]text[/b]text", ErrorMode.Strict));
+            Assert.Equal("text<b>text</b>text", BBEncodeForTest("text[b]text[/b]text", ErrorMode.Strict));
         }
 
-        [TestMethod]
+        [Fact]
         public void Test5()
         {
-            Assert.AreEqual("<a href=\"http://example.org/path?name=value\">text</a>", BBEncodeForTest("[url=http://example.org/path?name=value]text[/url]", ErrorMode.Strict));
+            Assert.Equal("<a href=\"http://example.org/path?name=value\">text</a>", BBEncodeForTest("[url=http://example.org/path?name=value]text[/url]", ErrorMode.Strict));
         }
 
-        [TestMethod]
+        [Fact]
         public void LeafElementWithoutContent()
         {
-            Assert.AreEqual("xxxnameyyy", BBEncodeForTest("[placeholder=name]", ErrorMode.Strict));
-            Assert.AreEqual("xxxyyy", BBEncodeForTest("[placeholder=]", ErrorMode.Strict));
-            Assert.AreEqual("xxxyyy", BBEncodeForTest("[placeholder]", ErrorMode.Strict));
-            Assert.AreEqual("axxxyyyb", BBEncodeForTest("a[placeholder]b", ErrorMode.Strict));
-            Assert.AreEqual("<b>a</b>xxxyyy<b>b</b>", BBEncodeForTest("[b]a[/b][placeholder][b]b[/b]", ErrorMode.Strict));
+            Assert.Equal("xxxnameyyy", BBEncodeForTest("[placeholder=name]", ErrorMode.Strict));
+            Assert.Equal("xxxyyy", BBEncodeForTest("[placeholder=]", ErrorMode.Strict));
+            Assert.Equal("xxxyyy", BBEncodeForTest("[placeholder]", ErrorMode.Strict));
+            Assert.Equal("axxxyyyb", BBEncodeForTest("a[placeholder]b", ErrorMode.Strict));
+            Assert.Equal("<b>a</b>xxxyyy<b>b</b>", BBEncodeForTest("[b]a[/b][placeholder][b]b[/b]", ErrorMode.Strict));
 
             try
             {
                 BBEncodeForTest("[placeholder][/placeholder]", ErrorMode.Strict);
-                Assert.Fail();
+                
             }
             catch (BBCodeParsingException)
             {
@@ -64,52 +56,52 @@ namespace Tests2
             try
             {
                 BBEncodeForTest("[placeholder/]", ErrorMode.Strict);
-                Assert.Fail();
+                
             }
             catch (BBCodeParsingException)
             {
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void ImgTagHasNoContent()
         {
-            Assert.AreEqual("<img src=\"url\" />", BBEncodeForTest("[img]url[/img]", ErrorMode.Strict));
+            Assert.Equal("<img src=\"url\" />", BBEncodeForTest("[img]url[/img]", ErrorMode.Strict));
         }
 
-        [TestMethod]
+        [Fact]
         public void ListItemIsAutoClosed()
         {
-            Assert.AreEqual("<li>item</li>", BBEncodeForTest("[*]item", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, false));
-            Assert.AreEqual("<ul><li>item</li></ul>", BBEncodeForTest("[list][*]item[/list]", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, false));
-            Assert.AreEqual("<li>item</li>", BBEncodeForTest("[*]item[/*]", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, false));
-            Assert.AreEqual("<li><li>item</li></li>", BBEncodeForTest("[*][*]item", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, false));
-            Assert.AreEqual("<li>1<li>2</li></li>", BBEncodeForTest("[*]1[*]2", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, false));
+            Assert.Equal("<li>item</li>", BBEncodeForTest("[*]item", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, false));
+            Assert.Equal("<ul><li>item</li></ul>", BBEncodeForTest("[list][*]item[/list]", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, false));
+            Assert.Equal("<li>item</li>", BBEncodeForTest("[*]item[/*]", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, false));
+            Assert.Equal("<li><li>item</li></li>", BBEncodeForTest("[*][*]item", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, false));
+            Assert.Equal("<li>1<li>2</li></li>", BBEncodeForTest("[*]1[*]2", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, false));
 
-            Assert.AreEqual("<li></li>item", BBEncodeForTest("[*]item", ErrorMode.Strict, BBTagClosingStyle.LeafElementWithoutContent, false));
-            Assert.AreEqual("<ul><li></li>item</ul>", BBEncodeForTest("[list][*]item[/list]", ErrorMode.Strict, BBTagClosingStyle.LeafElementWithoutContent, false));
-            Assert.AreEqual("<li></li><li></li>item", BBEncodeForTest("[*][*]item", ErrorMode.Strict, BBTagClosingStyle.LeafElementWithoutContent, false));
-            Assert.AreEqual("<li></li>1<li></li>2", BBEncodeForTest("[*]1[*]2", ErrorMode.Strict, BBTagClosingStyle.LeafElementWithoutContent, false));
+            Assert.Equal("<li></li>item", BBEncodeForTest("[*]item", ErrorMode.Strict, BBTagClosingStyle.LeafElementWithoutContent, false));
+            Assert.Equal("<ul><li></li>item</ul>", BBEncodeForTest("[list][*]item[/list]", ErrorMode.Strict, BBTagClosingStyle.LeafElementWithoutContent, false));
+            Assert.Equal("<li></li><li></li>item", BBEncodeForTest("[*][*]item", ErrorMode.Strict, BBTagClosingStyle.LeafElementWithoutContent, false));
+            Assert.Equal("<li></li>1<li></li>2", BBEncodeForTest("[*]1[*]2", ErrorMode.Strict, BBTagClosingStyle.LeafElementWithoutContent, false));
 
-            Assert.AreEqual("<li>item</li>", BBEncodeForTest("[*]item", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
-            Assert.AreEqual("<ul><li>item</li></ul>", BBEncodeForTest("[list][*]item[/list]", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
-            Assert.AreEqual("<li>item</li>", BBEncodeForTest("[*]item[/*]", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
-            Assert.AreEqual("<li></li><li>item</li>", BBEncodeForTest("[*][*]item", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
-            Assert.AreEqual("<li>1</li><li>2</li>", BBEncodeForTest("[*]1[*]2", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
-            Assert.AreEqual("<li>1<b>a</b></li><li>2</li>", BBEncodeForTest("[*]1[b]a[/b][*]2", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
-            Assert.AreEqual("<li>1<b>a</b></li><li>2</li>", BBEncodeForTest("[*]1[b]a[*]2", ErrorMode.ErrorFree, BBTagClosingStyle.AutoCloseElement, true));
+            Assert.Equal("<li>item</li>", BBEncodeForTest("[*]item", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
+            Assert.Equal("<ul><li>item</li></ul>", BBEncodeForTest("[list][*]item[/list]", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
+            Assert.Equal("<li>item</li>", BBEncodeForTest("[*]item[/*]", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
+            Assert.Equal("<li></li><li>item</li>", BBEncodeForTest("[*][*]item", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
+            Assert.Equal("<li>1</li><li>2</li>", BBEncodeForTest("[*]1[*]2", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
+            Assert.Equal("<li>1<b>a</b></li><li>2</li>", BBEncodeForTest("[*]1[b]a[/b][*]2", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
+            Assert.Equal("<li>1<b>a</b></li><li>2</li>", BBEncodeForTest("[*]1[b]a[*]2", ErrorMode.ErrorFree, BBTagClosingStyle.AutoCloseElement, true));
 
             try
             {
                 BBEncodeForTest("[*]1[b]a[*]2", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true);
-                Assert.Fail();
+                
             }
             catch (BBCodeParsingException)
             {
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TagContentTransformer()
         {
             var parser = new BBCodeParser(new[]
@@ -117,10 +109,10 @@ namespace Tests2
                     new BBTag("b", "<b>", "</b>", true, true, content => content.Trim()), 
                 });
 
-            Assert.AreEqual("<b>abc</b>", parser.ToHtml("[b] abc [/b]"));
+            Assert.Equal("<b>abc</b>", parser.ToHtml("[b] abc [/b]"));
         }
 
-        [TestMethod]
+        [Fact]
         public void AttributeValueTransformer()
         {
             var parser = new BBCodeParser(ErrorMode.Strict, null, new[]
@@ -130,12 +122,12 @@ namespace Tests2
                         new BBAttribute("font", "font", attributeRenderingContext => string.IsNullOrEmpty(attributeRenderingContext.AttributeValue) ? "" : "font-family:" + attributeRenderingContext.AttributeValue + ";")),
                 });
 
-            Assert.AreEqual("<span style=\"color:red;font-family:Arial;\">abc</span>", parser.ToHtml("[font color=red font=Arial]abc[/font]"));
-            Assert.AreEqual("<span style=\"color:red;\">abc</span>", parser.ToHtml("[font color=red]abc[/font]"));
+            Assert.Equal("<span style=\"color:red;font-family:Arial;\">abc</span>", parser.ToHtml("[font color=red font=Arial]abc[/font]"));
+            Assert.Equal("<span style=\"color:red;\">abc</span>", parser.ToHtml("[font color=red]abc[/font]"));
         }
 
         //the parser may never ever throw an exception other that BBCodeParsingException for any non-null input
-        [PexMethod]
+        /*[PexMethod]
         public void NoCrash(ErrorMode errorMode, [PexAssumeNotNull] string input, BBTagClosingStyle listItemBbTagClosingStyle, out string output)
         {
             PexAssume.EnumIsDefined(errorMode);
@@ -166,7 +158,7 @@ namespace Tests2
             try
             {
                 var output = BBEncodeForTest(input, errorMode);
-                PexAssert.IsTrue(!output.Contains("<script"));
+                PexAssert.True(!output.Contains("<script"));
             }
             catch (BBCodeParsingException)
             {
@@ -181,7 +173,7 @@ namespace Tests2
             var parser = BBCodeTestUtil.GetParserForTest(ErrorMode.ErrorFree, true, BBTagClosingStyle.AutoCloseElement, false);
             var tree = BBCodeTestUtil.CreateRootNode(parser.Tags.ToArray());
             var output = tree.ToHtml();
-            PexAssert.IsTrue(!output.Contains("<script"));
+            PexAssert.True(!output.Contains("<script"));
         }
 
         //no html-chars may be contained in the output under any circumstances
@@ -193,8 +185,8 @@ namespace Tests2
             {
                 var output = BBCodeTestUtil.SimpleBBEncodeForTest(input, errorMode);
                 PexObserve.ValueForViewing("output", output);
-                PexAssert.IsTrue(output.IndexOf('<') == -1);
-                PexAssert.IsTrue(output.IndexOf('>') == -1);
+                PexAssert.True(output.IndexOf('<') == -1);
+                PexAssert.True(output.IndexOf('>') == -1);
             }
             catch (BBCodeParsingException)
             {
@@ -206,7 +198,7 @@ namespace Tests2
         public void NoScript_FixedInput(ErrorMode errorMode)
         {
             PexAssume.EnumIsDefined(errorMode);
-            Assert.IsFalse(BBEncodeForTest("<script>", errorMode).Contains("<script"));
+            Assert.False(BBEncodeForTest("<script>", errorMode).Contains("<script"));
         }
 
         [PexMethod]
@@ -214,7 +206,7 @@ namespace Tests2
         {
             PexAssume.EnumIsDefined(errorMode);
             var encoded = BBEncodeForTest("[url=<script>][/url]", errorMode);
-            Assert.IsFalse(encoded.Contains("<script"));
+            Assert.False(encoded.Contains("<script"));
         }
 
         //1. given a syntax tree, encode it in BBCode, parse it back into a second syntax tree and ensure that both are exactly equal
@@ -229,7 +221,7 @@ namespace Tests2
             bbcode = tree.ToBBCode();
             var tree2 = parser.ParseSyntaxTree(bbcode);
             output = tree2.ToHtml();
-            Assert.IsTrue(tree == tree2);
+            Assert.True(tree == tree2);
         }
 
         //given a BBCode-string, parse it into a syntax tree, encode the tree in BBCode, parse it back into a second sytax tree and ensure that both are exactly equal
@@ -255,7 +247,7 @@ namespace Tests2
             bbcode = tree.ToBBCode();
             var tree2 = parser.ParseSyntaxTree(bbcode);
             output = tree2.ToHtml();
-            Assert.IsTrue(tree == tree2);
+            Assert.True(tree == tree2);
         }
 
         [PexMethod]
@@ -289,12 +281,12 @@ namespace Tests2
                 {
                     AssertTextNodesNotSplit(node.SubNodes[i]);
                     if (lastNode != null)
-                        Assert.IsFalse(lastNode is TextNode && node.SubNodes[i] is TextNode);
+                        Assert.False(lastNode is TextNode && node.SubNodes[i] is TextNode);
                     lastNode = node.SubNodes[i];
                 }
             }
         }
-
+        */
         public static string BBEncodeForTest(string bbCode, ErrorMode errorMode)
         {
             return BBEncodeForTest(bbCode, errorMode, BBTagClosingStyle.AutoCloseElement, false);
@@ -303,52 +295,52 @@ namespace Tests2
         {
             return BBCodeTestUtil.GetParserForTest(errorMode, true, listItemBbTagClosingStyle, enableIterationElementBehavior).ToHtml(bbCode).Replace("\r", "").Replace("\n", "<br/>");
         }
-
+        /*
         [PexMethod]
         public void ToTextDoesNotCrash([PexAssumeNotNull] string input, out string text)
         {
             var parser = BBCodeTestUtil.GetParserForTest(ErrorMode.ErrorFree, true, BBTagClosingStyle.AutoCloseElement, false);
             text = parser.ParseSyntaxTree(input).ToText();
-            Assert.IsTrue(text.Length <= input.Length);
+            Assert.True(text.Length <= input.Length);
         }
-
-        [TestMethod]
+        */
+        [Fact]
         public void StrictErrorMode()
         {
-            Assert.IsTrue(BBCodeTestUtil.IsValid(@"", ErrorMode.Strict));
-            Assert.IsTrue(BBCodeTestUtil.IsValid(@"[b]abc[/b]", ErrorMode.Strict));
-            Assert.IsFalse(BBCodeTestUtil.IsValid(@"[b]abc", ErrorMode.Strict));
-            Assert.IsFalse(BBCodeTestUtil.IsValid(@"abc[0]def", ErrorMode.Strict));
-            Assert.IsFalse(BBCodeTestUtil.IsValid(@"\", ErrorMode.Strict));
-            Assert.IsFalse(BBCodeTestUtil.IsValid(@"\x", ErrorMode.Strict));
-            Assert.IsFalse(BBCodeTestUtil.IsValid(@"[", ErrorMode.Strict));
-            Assert.IsFalse(BBCodeTestUtil.IsValid(@"]", ErrorMode.Strict));
+            Assert.True(BBCodeTestUtil.IsValid(@"", ErrorMode.Strict));
+            Assert.True(BBCodeTestUtil.IsValid(@"[b]abc[/b]", ErrorMode.Strict));
+            Assert.False(BBCodeTestUtil.IsValid(@"[b]abc", ErrorMode.Strict));
+            Assert.False(BBCodeTestUtil.IsValid(@"abc[0]def", ErrorMode.Strict));
+            Assert.False(BBCodeTestUtil.IsValid(@"\", ErrorMode.Strict));
+            Assert.False(BBCodeTestUtil.IsValid(@"\x", ErrorMode.Strict));
+            Assert.False(BBCodeTestUtil.IsValid(@"[", ErrorMode.Strict));
+            Assert.False(BBCodeTestUtil.IsValid(@"]", ErrorMode.Strict));
         }
 
-        [TestMethod]
+        [Fact]
         public void CorrectingErrorMode()
         {
-            Assert.IsTrue(BBCodeTestUtil.IsValid(@"", ErrorMode.TryErrorCorrection));
-            Assert.IsTrue(BBCodeTestUtil.IsValid(@"[b]abc[/b]", ErrorMode.TryErrorCorrection));
-            Assert.IsTrue(BBCodeTestUtil.IsValid(@"[b]abc", ErrorMode.TryErrorCorrection));
+            Assert.True(BBCodeTestUtil.IsValid(@"", ErrorMode.TryErrorCorrection));
+            Assert.True(BBCodeTestUtil.IsValid(@"[b]abc[/b]", ErrorMode.TryErrorCorrection));
+            Assert.True(BBCodeTestUtil.IsValid(@"[b]abc", ErrorMode.TryErrorCorrection));
 
-            Assert.AreEqual(@"\", BBEncodeForTest(@"\", ErrorMode.TryErrorCorrection));
-            Assert.AreEqual(@"\x", BBEncodeForTest(@"\x", ErrorMode.TryErrorCorrection));
-            Assert.AreEqual(@"\", BBEncodeForTest(@"\\", ErrorMode.TryErrorCorrection));
+            Assert.Equal(@"\", BBEncodeForTest(@"\", ErrorMode.TryErrorCorrection));
+            Assert.Equal(@"\x", BBEncodeForTest(@"\x", ErrorMode.TryErrorCorrection));
+            Assert.Equal(@"\", BBEncodeForTest(@"\\", ErrorMode.TryErrorCorrection));
         }
 
-        [TestMethod]
+        [Fact]
         public void CorrectingErrorMode_EscapeCharsIgnored()
         {
-            Assert.AreEqual(@"\\", BBEncodeForTest(@"\\\\", ErrorMode.TryErrorCorrection));
-            Assert.AreEqual(@"\", BBEncodeForTest(@"\", ErrorMode.TryErrorCorrection));
-            Assert.AreEqual(@"\x", BBEncodeForTest(@"\x", ErrorMode.TryErrorCorrection));
-            Assert.AreEqual(@"\", BBEncodeForTest(@"\\", ErrorMode.TryErrorCorrection));
-            Assert.AreEqual(@"[", BBEncodeForTest(@"\[", ErrorMode.TryErrorCorrection));
-            Assert.AreEqual(@"]", BBEncodeForTest(@"\]", ErrorMode.TryErrorCorrection));
+            Assert.Equal(@"\\", BBEncodeForTest(@"\\\\", ErrorMode.TryErrorCorrection));
+            Assert.Equal(@"\", BBEncodeForTest(@"\", ErrorMode.TryErrorCorrection));
+            Assert.Equal(@"\x", BBEncodeForTest(@"\x", ErrorMode.TryErrorCorrection));
+            Assert.Equal(@"\", BBEncodeForTest(@"\\", ErrorMode.TryErrorCorrection));
+            Assert.Equal(@"[", BBEncodeForTest(@"\[", ErrorMode.TryErrorCorrection));
+            Assert.Equal(@"]", BBEncodeForTest(@"\]", ErrorMode.TryErrorCorrection));
         }
 
-        [TestMethod]
+        [Fact]
         public void TextNodeHtmlTemplate()
         {
             var parserNull = new BBCodeParser(ErrorMode.Strict, null, new[]
@@ -364,29 +356,29 @@ namespace Tests2
                     new BBTag("b", "<b>", "</b>"), 
                 });
 
-            Assert.AreEqual(@"", parserNull.ToHtml(@""));
-            Assert.AreEqual(@"abc", parserNull.ToHtml(@"abc"));
-            Assert.AreEqual(@"abc<b>def</b>", parserNull.ToHtml(@"abc[b]def[/b]"));
+            Assert.Equal(@"", parserNull.ToHtml(@""));
+            Assert.Equal(@"abc", parserNull.ToHtml(@"abc"));
+            Assert.Equal(@"abc<b>def</b>", parserNull.ToHtml(@"abc[b]def[/b]"));
 
-            Assert.AreEqual(@"", parserEmpty.ToHtml(@""));
-            Assert.AreEqual(@"", parserEmpty.ToHtml(@"abc"));
-            Assert.AreEqual(@"<b></b>", parserEmpty.ToHtml(@"abc[b]def[/b]"));
+            Assert.Equal(@"", parserEmpty.ToHtml(@""));
+            Assert.Equal(@"", parserEmpty.ToHtml(@"abc"));
+            Assert.Equal(@"<b></b>", parserEmpty.ToHtml(@"abc[b]def[/b]"));
 
-            Assert.AreEqual(@"", parserDiv.ToHtml(@""));
-            Assert.AreEqual(@"<div>abc</div>", parserDiv.ToHtml(@"abc"));
-            Assert.AreEqual(@"<div>abc</div><b><div>def</div></b>", parserDiv.ToHtml(@"abc[b]def[/b]"));
+            Assert.Equal(@"", parserDiv.ToHtml(@""));
+            Assert.Equal(@"<div>abc</div>", parserDiv.ToHtml(@"abc"));
+            Assert.Equal(@"<div>abc</div><b><div>def</div></b>", parserDiv.ToHtml(@"abc[b]def[/b]"));
         }
 
-        [TestMethod]
+        [Fact]
         public void ContentTransformer_EmptyAttribute_CanChooseValueFromAttributeRenderingContext()
         {
             var parser = BBCodeTestUtil.GetParserForTest(ErrorMode.Strict, true, BBTagClosingStyle.AutoCloseElement, false);
 
-            Assert.AreEqual(@"<a href=""http://codekicker.de"">http://codekicker.de</a>", parser.ToHtml(@"[url2]http://codekicker.de[/url2]"));
-            Assert.AreEqual(@"<a href=""http://codekicker.de"">http://codekicker.de</a>", parser.ToHtml(@"[url2=http://codekicker.de]http://codekicker.de[/url2]"));
+            Assert.Equal(@"<a href=""http://codekicker.de"">http://codekicker.de</a>", parser.ToHtml(@"[url2]http://codekicker.de[/url2]"));
+            Assert.Equal(@"<a href=""http://codekicker.de"">http://codekicker.de</a>", parser.ToHtml(@"[url2=http://codekicker.de]http://codekicker.de[/url2]"));
         }
 
-        [TestMethod]
+        [Fact]
         public void StopProcessingDirective_StopsParserProcessingTagLikeText_UntilClosingTag()
         {
             var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>") { StopProcessing = true } });
@@ -394,10 +386,10 @@ namespace Tests2
             var input = "[code][i]This should [u]be a[/u] text literal[/i][/code]";
             var expected = "<pre>[i]This should [u]be a[/u] text literal[/i]</pre>";
 
-            Assert.AreEqual(expected, parser.ToHtml(input));
+            Assert.Equal(expected, parser.ToHtml(input));
         }
 
-        [TestMethod]
+        [Fact]
         public void GreedyAttributeProcessing_ConsumesAllTokensForAttributeValue()
         {
             var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("quote", "<div><span>Posted by ${name}</span>", "</div>", new BBAttribute("name", "")) { GreedyAttributeProcessing = true } });
@@ -405,10 +397,10 @@ namespace Tests2
             var input = "[quote=Test User With Spaces]Here is my comment[/quote]";
             var expected = "<div><span>Posted by Test User With Spaces</span>Here is my comment</div>";
 
-            Assert.AreEqual(expected, parser.ToHtml(input));
+            Assert.Equal(expected, parser.ToHtml(input));
         }
 
-        [TestMethod]
+        [Fact]
         public void NewlineTrailingOpeningTagIsIgnored()
         {
             var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>") });
@@ -416,10 +408,10 @@ namespace Tests2
             var input = "[code]\nHere is some code[/code]";
             var expected = "<pre>Here is some code</pre>"; // No newline after the opening PRE
 
-            Assert.AreEqual(expected, parser.ToHtml(input));
+            Assert.Equal(expected, parser.ToHtml(input));
         }
 
-        [TestMethod]
+        [Fact]
         public void SuppressFirstNewlineAfter_StopsFirstNewlineAfterClosingTag()
         {
             var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>"){ SuppressFirstNewlineAfter = true } });
@@ -427,7 +419,7 @@ namespace Tests2
             var input = "[code]Here is some code[/code]\nMore text!";
             var expected = "<pre>Here is some code</pre>More text!"; // No newline after the closing PRE
 
-            Assert.AreEqual(expected, parser.ToHtml(input));
+            Assert.Equal(expected, parser.ToHtml(input));
         }
     }
 }

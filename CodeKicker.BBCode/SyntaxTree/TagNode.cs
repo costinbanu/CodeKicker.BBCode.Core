@@ -4,7 +4,7 @@ using System.Linq;
 using System.Data;
 using System.Web;
 
-namespace CodeKicker.BBCode.SyntaxTree
+namespace CodeKicker.BBCode.Core.SyntaxTree
 {
     public sealed class TagNode : SyntaxTreeNode
     {

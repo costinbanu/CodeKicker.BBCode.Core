@@ -1,12 +1,10 @@
-﻿using System;
+﻿using CodeKicker.BBCode.Core.SyntaxTree;
+using RandomTestValues;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using CodeKicker.BBCode;
-using CodeKicker.BBCode.SyntaxTree;
-using Microsoft.Pex.Framework;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Tests2
+namespace CodeKicker.BBCode.Core.Tests
 {
     public static class BBCodeTestUtil
     {
@@ -18,14 +16,13 @@ namespace Tests2
         }
         static SyntaxTreeNode CreateNode(BBTag[] allowedTags, bool allowText)
         {
-            switch (PexChoose.ValueFromRange("type", allowText ? 0 : 1, 2))
+            switch (new[] { allowText ? 0 : 1, 2 }[RandomValue.Int(1, 0)])
             {
                 case 0:
-                    var text = PexChoose.Value<string>("text");
-                    PexAssume.IsTrue(!String.IsNullOrEmpty(text));
+                    var text = RandomValue.String();
                     return new TextNode(text);
                 case 1:
-                    var tag = allowedTags[PexChoose.ValueFromRange("tag", 0, allowedTags.Length)];
+                    var tag = allowedTags[RandomValue.Int(allowedTags.Length, 0)];
                     var node = new TagNode(tag);
 
                     AddSubnodes(allowedTags, node);
@@ -35,11 +32,11 @@ namespace Tests2
                         var selectedIds = new List<string>();
                         foreach (var attr in tag.Attributes)
                         {
-                            if (!selectedIds.Contains(attr.ID) && PexChoose.Value<bool>("include"))
+                            if (!selectedIds.Contains(attr.ID) && RandomValue.Bool())
                             {
-                                var val = PexChoose.Value<string>("val");
-                                PexAssume.IsTrue(val != null);
-                                PexAssume.IsTrue(val.IndexOfAny("[] ".ToCharArray()) == -1);
+                                var val = RandomValue.String(); //PexChoose.Value<string>("val");
+                                //PexAssume.IsTrue(val != null);
+                                //PexAssume.IsTrue(val.IndexOfAny("[] ".ToCharArray()) == -1);
                                 node.AttributeValues[attr] = val;
                                 selectedIds.Add(attr.ID);
                             }
@@ -47,13 +44,13 @@ namespace Tests2
                     }
                     return node;
                 default:
-                    PexAssume.Fail();
+                    //PexAssume.Fail();
                     return null;
             }
         }
         static void AddSubnodes(BBTag[] allowedTags, SyntaxTreeNode node)
         {
-            int count = PexChoose.ValueFromRange("count", 0, 3);
+            int count = RandomValue.Int(3, 0);
             bool lastWasText = false;
             for (int i = 0; i < count; i++)
             {
@@ -118,7 +115,7 @@ namespace Tests2
 
         public static SequenceNode GetAnyTree()
         {
-            var parser = GetParserForTest(PexChoose.EnumValue<ErrorMode>("errorMode"), true, PexChoose.EnumValue<BBTagClosingStyle>("listItemBBTagClosingStyle"), false);
+            var parser = GetParserForTest(RandomValue.Object<ErrorMode>(), true, RandomValue.Object<BBTagClosingStyle>(), false);
             return CreateRootNode(parser.Tags.ToArray());
         }
     }

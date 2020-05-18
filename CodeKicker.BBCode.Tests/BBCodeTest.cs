@@ -1,64 +1,60 @@
-﻿using System;
-using System.Text;
+﻿using CodeKicker.BBCode.Core.SyntaxTree;
+using RandomTestValues;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using CodeKicker.BBCode.SyntaxTree;
-using Microsoft.Pex.Framework;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Tests2;
+using Xunit;
 
-namespace CodeKicker.BBCode.Tests
+namespace CodeKicker.BBCode.Core.Tests
 {
-    [TestClass]
-    [PexClass(MaxRuns = 1000000000, MaxRunsWithoutNewTests = 1000000000, Timeout = 1000000000, MaxExecutionTreeNodes = 1000000000, MaxBranches = 1000000000, MaxWorkingSet = 1000000000, MaxConstraintSolverMemory = 1000000000, MaxStack = 1000000000, MaxConditions = 1000000000)]
     public partial class BBCodeTest
     {
-        [PexMethod]
-        public void DefaultParserWellconfigured([PexAssumeNotNull] string input)
+        [Fact]
+        public void DefaultParserWellconfigured()
         {
             try
             {
-                BBCode.ToHtml(input);
+                BBCode.ToHtml(RandomValue.String());
             }
             catch (BBCodeParsingException)
             {
             }
         }
 
-        [PexMethod]
-        public void Escape_NoCrash([PexAssumeNotNull] string text, out string escaped)
+        [Fact]
+        public void Escape_NoCrash()
         {
-            escaped = BBCode.EscapeText(text);
+            BBCode.EscapeText(RandomValue.String());
         }
 
-        [PexMethod]
-        public void Escape_Unescape_Roundtrip([PexAssumeNotNull] string text)
+        [Theory, InlineData("fsdgsdf sdfghsgfdw34636 [] \" sdhdkfghdjkf ][ \" ssdds [[[ ]]]][][][[[]")]
+        public void Escape_Unescape_Roundtrip(string text)
         {
             var escaped = BBCode.EscapeText(text);
             var unescaped = BBCode.UnescapeText(escaped);
-            Assert.AreEqual(text, unescaped);
+            Assert.Equal(text, unescaped);
         }
 
-        [PexMethod]
-        public void EscapedStringIsSafeForParsing([PexAssumeNotNull] string text)
+        [Theory, InlineData("fsdgsdf sdfghsgfdw34636 [] \" sdhdkfghdjkf ][ \" ssdds [[[ ]]]][][][[[]")]
+        public void EscapedStringIsSafeForParsing(string text)
         {
             var escaped = BBCode.EscapeText(text);
 
             var ast = GetSimpleParser().ParseSyntaxTree(escaped);
 
             if (text.Length == 0)
-                Assert.AreEqual(0, ast.SubNodes.Count);
+                Assert.Equal(0, ast.SubNodes.Count);
             else
-                Assert.AreEqual(text, ((TextNode)ast.SubNodes.Single()).Text);
+                Assert.Equal(text, ((TextNode)ast.SubNodes.Single()).Text);
         }
 
-        [PexMethod]
-        public void Escape_Parse_ToText_Roundtrip([PexAssumeNotNull] string text)
+        [Theory, InlineData("fsdgsdf sdfghsgfdw34636 [] \" sdhdkfghdjkf ][ \" ssdds [[[ ]]]][][][[[]")]
+        public void Escape_Parse_ToText_Roundtrip(string text)
         {
             var escaped = BBCode.EscapeText(text);
             var unescaped = GetSimpleParser().ParseSyntaxTree(escaped);
             var text2 = unescaped.ToText();
-            Assert.AreEqual(text, text2);
+            Assert.Equal(text, text2);
         }
 
         static BBCodeParser GetSimpleParser()
@@ -66,7 +62,7 @@ namespace CodeKicker.BBCode.Tests
             return new BBCodeParser(new List<BBTag>());
         }
 
-        [TestMethod]
+        [Fact]
         public void ReplaceTextSpans_ManualTestCases()
         {
             ReplaceTextSpans_ManualTestCases_TestCase("", "", null, null);
@@ -90,42 +86,42 @@ namespace CodeKicker.BBCode.Tests
         {
             var tree1 = BBCodeTestUtil.GetParserForTest(ErrorMode.Strict, false, BBTagClosingStyle.AutoCloseElement, false).ParseSyntaxTree(bbCode);
             var tree2 = BBCode.ReplaceTextSpans(tree1, getTextSpansToReplace ?? (txt => new TextSpanReplaceInfo[0]), tagFilter);
-            Assert.AreEqual(expected, tree2.ToBBCode());
+            Assert.Equal(expected, tree2.ToBBCode());
         }
 
-        [PexMethod]
+        [Fact]
         public void ReplaceTextSpans_WhenNoModifications_TreeIsPreserved()
         {
             var tree1 = BBCodeTestUtil.GetAnyTree();
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => new TextSpanReplaceInfo[0], null);
-            Assert.AreSame(tree1, tree2);
+            Assert.Equal(tree1, tree2);
         }
 
-        [PexMethod]
+        [Fact]
         public void ReplaceTextSpans_WhenEmptyModifications_TreeIsPreserved()
         {
             var tree1 = BBCodeTestUtil.GetAnyTree();
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => new[] { new TextSpanReplaceInfo(0, 0, null), }, null);
-            Assert.AreEqual(tree1.ToBBCode(), tree2.ToBBCode());
+            Assert.Equal(tree1.ToBBCode(), tree2.ToBBCode());
         }
 
-        [PexMethod]
+        [Fact]
         public void ReplaceTextSpans_WhenEverythingIsConvertedToX_OutputContainsOnlyX_CheckedWithContains()
         {
             var tree1 = BBCodeTestUtil.GetAnyTree();
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => new[] { new TextSpanReplaceInfo(0, txt.Length, new TextNode("x")), }, null);
-            Assert.IsTrue(!tree2.ToBBCode().Contains("a"));
+            Assert.True(!tree2.ToBBCode().Contains("a"));
         }
 
-        [PexMethod]
+        [Fact]
         public void ReplaceTextSpans_WhenEverythingIsConvertedToX_OutputContainsOnlyX_CheckedWithTreeWalk()
         {
             var tree1 = BBCodeTestUtil.GetAnyTree();
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => new[] { new TextSpanReplaceInfo(0, txt.Length, new TextNode("x")), }, null);
-            new TextAssertVisitor(str => Assert.IsTrue(str == "x")).Visit(tree2);
+            new TextAssertVisitor(str => Assert.True(str == "x")).Visit(tree2);
         }
 
-        [PexMethod(MaxConstraintSolverTime = 4)]
+        /*[Fact]
         public void ReplaceTextSpans_ArbitraryTextSpans_NoCrash()
         {
             var tree1 = BBCodeTestUtil.GetAnyTree();
@@ -148,7 +144,7 @@ namespace CodeKicker.BBCode.Tests
                 }, null);
             var bbCode = tree2.ToBBCode();
             PexAssert.TrueForAll(chosenTexts, s => bbCode.Contains(s));
-        }
+        }*/
 
         class TextAssertVisitor : SyntaxTreeVisitor
         {
@@ -159,7 +155,7 @@ namespace CodeKicker.BBCode.Tests
                 this.assertFunction = assertFunction;
             }
 
-            protected internal override SyntaxTreeNode Visit(TextNode node)
+            protected override SyntaxTreeNode Visit(TextNode node)
             {
                 assertFunction(node.Text);
                 return node;

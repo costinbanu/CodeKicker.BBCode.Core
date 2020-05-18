@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CodeKicker.BBCode.SyntaxTree
+namespace CodeKicker.BBCode.Core.SyntaxTree
 {
     public sealed class SequenceNode : SyntaxTreeNode
     {

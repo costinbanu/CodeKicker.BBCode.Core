@@ -5,7 +5,7 @@ using System.Linq;
 using System.Resources;
 using System.Text;
 
-namespace CodeKicker.BBCode
+namespace CodeKicker.BBCode.Core
 {
     static class MessagesHelper
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace CodeKicker.BBCode.SyntaxTree
+namespace CodeKicker.BBCode.Core.SyntaxTree
 {
     public class SyntaxTreeVisitor
     {
