@@ -378,21 +378,28 @@ namespace CodeKicker.BBCode.Core
             if (end >= input.Length || input[end] != '=') return null;
             end++;
 
-            var endIndex = Math.Min(
-                input.IndexOfAny((greedyProcessing ? "[]" : " []").ToCharArray(), end), 
-                code.Length > 0 ? input.LastIndexOf(':') : int.MaxValue
-            );
+            int endIndex;
+            if (!greedyProcessing)
+            {
+                endIndex = input.IndexOfAny(" []".ToCharArray(), end);
+            }
+            else
+            {
+                endIndex = input.IndexOfAny("[]".ToCharArray(), end);
+            }
 
             if (endIndex == -1) endIndex = input.Length;
-            var toAdd = 0;
-            if (endIndex < input.Length && input[endIndex] == ':' && input.Substring(endIndex + 1, code.Length) == code)
+
+            var diff = 0;
+            if (code.Length > 0 && input[endIndex] == ']' && endIndex >= code.Length && input[endIndex - code.Length - 1] == ':')
             {
-                toAdd = code.Length + 1;
+                diff = code.Length + 1;
+                endIndex -= diff;
             }
 
             var valStart = pos + 1;
             var result = input.Substring(valStart, endIndex - valStart);
-            pos = endIndex + toAdd;
+            pos = endIndex + diff;
             return result;
         }
         static bool ParseWhitespace(string input, ref int pos)

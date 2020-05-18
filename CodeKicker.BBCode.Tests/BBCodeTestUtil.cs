@@ -3,6 +3,7 @@ using RandomTestValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Web;
 
 namespace CodeKicker.BBCode.Core.Tests
 {
@@ -34,9 +35,12 @@ namespace CodeKicker.BBCode.Core.Tests
                         {
                             if (!selectedIds.Contains(attr.ID) && RandomValue.Bool())
                             {
-                                var val = RandomValue.String(); //PexChoose.Value<string>("val");
-                                //PexAssume.IsTrue(val != null);
-                                //PexAssume.IsTrue(val.IndexOfAny("[] ".ToCharArray()) == -1);
+                                string val;
+                                do
+                                {
+                                    val = RandomValue.String();
+                                } while (val.IndexOfAny("[] ".ToCharArray()) != -1);
+
                                 node.AttributeValues[attr] = val;
                                 selectedIds.Add(attr.ID);
                             }
@@ -77,6 +81,32 @@ namespace CodeKicker.BBCode.Core.Tests
                     !includePlaceholder ? null : new BBTag("placeholder", "${name}", "", false, BBTagClosingStyle.LeafElementWithoutContent, null, new BBAttribute("name", "", name => "xxx" + name.AttributeValue + "yyy")), 
                 }.Where(x => x != null).ToArray());
         }
+
+        public static BBCodeParser GetCustomParser()
+        {
+            return new BBCodeParser(new[]
+            {
+                    new BBTag("b", "<b>", "</b>"),
+                    new BBTag("i", "<i>", "</i>"),
+                    new BBTag("u", "<u>", "</u>"),
+                    new BBTag("code", "<pre class=\"prettyprint\">", "</pre>"),
+                    new BBTag("img", "<br/><img src=\"${content}\" /><br/>", string.Empty, false, false),
+                    new BBTag("quote", "<blockquote class=\"PostQuote\">${name}", "</blockquote>",
+                        new BBAttribute("name", "", (a) => string.IsNullOrWhiteSpace(a.AttributeValue) ? "" : $"<b>{HttpUtility.HtmlDecode(a.AttributeValue).Trim('"')}</b> a scris:<br/>")),
+                    new BBTag("*", "<li>", "</li>", true, false),
+                    new BBTag("list", "<${attr}>", "</${attr}>", true, true,
+                        new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\"")),
+                    new BBTag("url", "<a href=\"${href}\" target=\"_blank\">", "</a>",
+                        new BBAttribute("href", "", a => string.IsNullOrWhiteSpace(a?.AttributeValue) ? "${content}" : a.AttributeValue)),
+                    new BBTag("color", "<span style=\"color:${code}\">", "</span>",
+                        new BBAttribute("code", "")),
+                    new BBTag("size", "<span style=\"font-size:${fsize}\">", "</span>",
+                        new BBAttribute("fsize", "", a => decimal.TryParse(a?.AttributeValue, out var val) ? FormattableString.Invariant($"{val / 100m:#.##}em") : "1em")),
+                    new BBTag("attachment", "#{AttachmentFileName=${content}/AttachmentIndex=${num}}#", "", false, true,
+                        new BBAttribute("num", ""))
+            });
+        }
+
         static string GetUrl2Href(IAttributeRenderingContext attributeRenderingContext)
         {
             if (!string.IsNullOrEmpty(attributeRenderingContext.AttributeValue)) return attributeRenderingContext.AttributeValue;

@@ -4,11 +4,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace CodeKicker.BBCode.Core.Tests
 {
     public partial class BBCodeTest
     {
+        private readonly ITestOutputHelper _output;
+
+        public BBCodeTest(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
         [Fact]
         public void DefaultParserWellconfigured()
         {
@@ -121,30 +129,66 @@ namespace CodeKicker.BBCode.Core.Tests
             new TextAssertVisitor(str => Assert.True(str == "x")).Visit(tree2);
         }
 
-        /*[Fact]
+        [Fact]
         public void ReplaceTextSpans_ArbitraryTextSpans_NoCrash()
         {
-            var tree1 = BBCodeTestUtil.GetAnyTree();
-            var chosenTexts = new List<string>();
-            var tree2 = BBCode.ReplaceTextSpans(tree1, txt =>
+            for (int i = 0; i < RandomValue.Int(100, 10); i++)
+            {
+                var tree1 = BBCodeTestUtil.GetAnyTree();
+                var chosenTexts = new List<string>();
+                var tree2 = BBCode.ReplaceTextSpans(tree1, txt =>
+                    {
+                        var count = RandomValue.Int(3, 0);
+                        var indexes = new List<int>();
+                        for (int i = 0; i < count; i++)
+                        {
+                            var value = 0;
+                            do
+                            {
+                                value = RandomValue.Int(txt.Length, 0);
+                            } while (i > 0 && value <= indexes[i - 1]);
+                            indexes.Add(value);
+                        }
+                        _output.WriteLine(string.Join(", ", indexes));
+                        return
+                            Enumerable.Range(0, count)
+                                .Select(i =>
+                                    {
+                                        var maxIndex = i == count - 1 ? txt.Length : indexes[i + 1];
+                                        var text = RandomValue.String();
+                                        chosenTexts.Add(text);
+                                        return new TextSpanReplaceInfo(indexes[i], RandomValue.Int(indexes[i] - maxIndex + 1, 0), new TextNode(text));
+                                    })
+                                .ToArray();
+                    }, null);
+                var bbCode = tree2.ToBBCode();
+                if (!chosenTexts.All(s => bbCode.Contains(s)))
                 {
-                    var count = PexChoose.ValueFromRange("count", 0, 3);
-                    var indexes = PexChoose.Array<int>("indexes", count);
-                    PexAssume.TrueForAll(0, count, i => indexes[i] >= 0 && indexes[i] <= txt.Length && (i == 0 || indexes[i - 1] < indexes[i]));
-                    return
-                        Enumerable.Range(0, count)
-                            .Select(i =>
-                                {
-                                    var maxIndex = i == count - 1 ? txt.Length : indexes[i + 1];
-                                    var text = PexChoose.ValueNotNull<string>("text");
-                                    chosenTexts.Add(text);
-                                    return new TextSpanReplaceInfo(indexes[i], PexChoose.ValueFromRange("count", 0, indexes[i] - maxIndex + 1), new TextNode(text));
-                                })
-                            .ToArray();
-                }, null);
-            var bbCode = tree2.ToBBCode();
-            PexAssert.TrueForAll(chosenTexts, s => bbCode.Contains(s));
-        }*/
+
+                }
+                Assert.All(chosenTexts, s => Assert.Contains(s, bbCode));
+            }
+        }
+
+        [Theory]
+        [InlineData("8475h6jds", "[b:8475h6jds]this is some bold text[/b:8475h6jds]", "<b>this is some bold text</b>")]
+        [InlineData("h75ks63nh5", "[url:h75ks63nh5]https://google.com[/url:h75ks63nh5]", "<a href=\"https://google.com\" target=\"_blank\">https://google.com</a>")]
+        [InlineData("7845jh5674", "[url=https://google.com:7845jh5674]this is a custom link[/url:7845jh5674]", "<a href=\"https://google.com\" target=\"_blank\">this is a custom link</a>")]
+        public void BbcodeUid_IsHandled(string uid, string text, string expectedHtml)
+        {
+            Assert.Equal(expectedHtml, BBCodeTestUtil.GetCustomParser().ToHtml(text, uid));
+        }
+
+        [Theory]
+        [InlineData("8475h6jds", "[b:8475h6jds][i:8475h6jds]this is some bold italic text[/i:8475h6jds][/b:8475h6jds]", "<b><i>this is some bold italic text</i></b>")]
+        [InlineData("7sh4g6b3j", "[b:7sh4g6b3j][url:7sh4g6b3j]https://google.com[/url:7sh4g6b3j][/b:7sh4g6b3j]", "<b><a href=\"https://google.com\" target=\"_blank\">https://google.com</a></b>")]
+        [InlineData("87th8gfr", "[b:87th8gfr][url=https://google.com:87th8gfr]some text[/url:87th8gfr][/b:87th8gfr]", "<b><a href=\"https://google.com\" target=\"_blank\">some text</a></b>")]
+        [InlineData("3q85xb4n", "[b:3q85xb4n][size=200:3q85xb4n][color=red:3q85xb4n]aaa[/color:3q85xb4n][/size:3q85xb4n][/b:3q85xb4n]", "<b><span style=\"font-size:2em\"><span style=\"color:red\">aaa</span></span></b>")]
+        public void BbcodeUid_WhenNested_IsHandled(string uid, string text, string expectedHtml)
+        {
+            Assert.Equal(expectedHtml, BBCodeTestUtil.GetCustomParser().ToHtml(text, uid));
+        }
+
 
         class TextAssertVisitor : SyntaxTreeVisitor
         {
