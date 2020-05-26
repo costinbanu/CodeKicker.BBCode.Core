@@ -3,6 +3,7 @@ using RandomTestValues;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Web;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -142,13 +143,9 @@ namespace CodeKicker.BBCode.Core.Tests
                         var indexes = new List<int>();
                         for (int i = 0; i < count; i++)
                         {
-                            var value = 0;
-                            do
-                            {
-                                value = RandomValue.Int(txt.Length, 0);
-                            } while (i > 0 && value <= indexes[i - 1]);
-                            indexes.Add(value);
+                            indexes.Add(RandomValue.Int(txt.Length, 0));
                         }
+                        indexes.Sort();
                         _output.WriteLine(string.Join(", ", indexes));
                         return
                             Enumerable.Range(0, count)
@@ -174,9 +171,10 @@ namespace CodeKicker.BBCode.Core.Tests
         [InlineData("8475h6jds", "[b:8475h6jds]this is some bold text[/b:8475h6jds]", "<b>this is some bold text</b>")]
         [InlineData("h75ks63nh5", "[url:h75ks63nh5]https://google.com[/url:h75ks63nh5]", "<a href=\"https://google.com\" target=\"_blank\">https://google.com</a>")]
         [InlineData("7845jh5674", "[url=https://google.com:7845jh5674]this is a custom link[/url:7845jh5674]", "<a href=\"https://google.com\" target=\"_blank\">this is a custom link</a>")]
+        [InlineData("474h4gfs", "[quote=\"someone\":474h4gfs]some text[/quote:474h4gfs]", "<blockquote class=\"PostQuote\"><b>someone</b> wrote:<br/>some text</blockquote>")]
         public void BbcodeUid_IsHandled(string uid, string text, string expectedHtml)
         {
-            Assert.Equal(expectedHtml, BBCodeTestUtil.GetCustomParser().ToHtml(text, uid));
+            Assert.Equal(expectedHtml, HttpUtility.HtmlDecode(BBCodeTestUtil.GetCustomParser().ToHtml(text, uid)));
         }
 
         [Theory]
@@ -184,9 +182,10 @@ namespace CodeKicker.BBCode.Core.Tests
         [InlineData("7sh4g6b3j", "[b:7sh4g6b3j][url:7sh4g6b3j]https://google.com[/url:7sh4g6b3j][/b:7sh4g6b3j]", "<b><a href=\"https://google.com\" target=\"_blank\">https://google.com</a></b>")]
         [InlineData("87th8gfr", "[b:87th8gfr][url=https://google.com:87th8gfr]some text[/url:87th8gfr][/b:87th8gfr]", "<b><a href=\"https://google.com\" target=\"_blank\">some text</a></b>")]
         [InlineData("3q85xb4n", "[b:3q85xb4n][size=200:3q85xb4n][color=red:3q85xb4n]aaa[/color:3q85xb4n][/size:3q85xb4n][/b:3q85xb4n]", "<b><span style=\"font-size:2em\"><span style=\"color:red\">aaa</span></span></b>")]
+        [InlineData("474h4gfs", "[quote=\"someone\":474h4gfs][quote=\"someone else\":474h4gfs]some nested text[/quote:474h4gfs][/quote:474h4gfs]", "<blockquote class=\"PostQuote\"><b>someone</b> wrote:<br/><blockquote class=\"PostQuote\"><b>someone else</b> wrote:<br/>some nested text</blockquote></blockquote>")]
         public void BbcodeUid_WhenNested_IsHandled(string uid, string text, string expectedHtml)
         {
-            Assert.Equal(expectedHtml, BBCodeTestUtil.GetCustomParser().ToHtml(text, uid));
+            Assert.Equal(expectedHtml, HttpUtility.HtmlDecode(BBCodeTestUtil.GetCustomParser().ToHtml(text, uid)));
         }
 
 
