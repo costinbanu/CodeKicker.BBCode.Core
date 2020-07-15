@@ -109,7 +109,7 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             var parser = new BBCodeParser(new[]
                 {
-                    new BBTag("b", "<b>", "</b>", true, true, content => content.Trim()), 
+                    new BBTag("b", "<b>", "</b>", true, true, content => content.Trim(), 1), 
                 });
 
             Assert.Equal("<b>abc</b>", parser.ToHtml("[b] abc [/b]"));
@@ -120,7 +120,7 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             var parser = new BBCodeParser(ErrorMode.Strict, null, new[]
                 {
-                    new BBTag("font", "<span style=\"${color}${font}\">", "</span>", true, true,
+                    new BBTag("font", "<span style=\"${color}${font}\">", "</span>", true, true, 1,
                         new BBAttribute("color", "color", attributeRenderingContext => string.IsNullOrEmpty(attributeRenderingContext.AttributeValue) ? "" : "color:" + attributeRenderingContext.AttributeValue + ";"),
                         new BBAttribute("font", "font", attributeRenderingContext => string.IsNullOrEmpty(attributeRenderingContext.AttributeValue) ? "" : "font-family:" + attributeRenderingContext.AttributeValue + ";")),
                 });
@@ -319,15 +319,15 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             var parserNull = new BBCodeParser(ErrorMode.Strict, null, new[]
                 {
-                    new BBTag("b", "<b>", "</b>"), 
+                    new BBTag("b", "<b>", "</b>", 1), 
                 });
             var parserEmpty = new BBCodeParser(ErrorMode.Strict, "", new[]
                 {
-                    new BBTag("b", "<b>", "</b>"), 
+                    new BBTag("b", "<b>", "</b>", 1), 
                 });
             var parserDiv = new BBCodeParser(ErrorMode.Strict, "<div>${content}</div>", new[]
                 {
-                    new BBTag("b", "<b>", "</b>"), 
+                    new BBTag("b", "<b>", "</b>", 1), 
                 });
 
             Assert.Equal(@"", parserNull.ToHtml(@""));
@@ -355,7 +355,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [Fact]
         public void StopProcessingDirective_StopsParserProcessingTagLikeText_UntilClosingTag()
         {
-            var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>") { StopProcessing = true } });
+            var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>", 1) { StopProcessing = true } });
 
             var input = "[code][i]This should [u]be a[/u] text literal[/i][/code]";
             var expected = "<pre>[i]This should [u]be a[/u] text literal[/i]</pre>";
@@ -366,7 +366,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [Fact]
         public void GreedyAttributeProcessing_ConsumesAllTokensForAttributeValue()
         {
-            var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("quote", "<div><span>Posted by ${name}</span>", "</div>", new BBAttribute("name", "")) { GreedyAttributeProcessing = true } });
+            var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("quote", "<div><span>Posted by ${name}</span>", "</div>", 1, new BBAttribute("name", "")) { GreedyAttributeProcessing = true } });
 
             var input = "[quote=Test User With Spaces]Here is my comment[/quote]";
             var expected = "<div><span>Posted by Test User With Spaces</span>Here is my comment</div>";
@@ -377,7 +377,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [Fact]
         public void NewlineTrailingOpeningTagIsIgnored()
         {
-            var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>") });
+            var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>", 1) });
 
             var input = "[code]\nHere is some code[/code]";
             var expected = "<pre>Here is some code</pre>"; // No newline after the opening PRE
@@ -388,12 +388,28 @@ namespace CodeKicker.BBCode.Core.Tests
         [Fact]
         public void SuppressFirstNewlineAfter_StopsFirstNewlineAfterClosingTag()
         {
-            var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>"){ SuppressFirstNewlineAfter = true } });
+            var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>", 1){ SuppressFirstNewlineAfter = true } });
 
             var input = "[code]Here is some code[/code]\nMore text!";
             var expected = "<pre>Here is some code</pre>More text!"; // No newline after the closing PRE
 
             Assert.Equal(expected, parser.ToHtml(input));
+        }
+
+        [Fact]
+        public void GetBitfield_WithUid_IsCorrect()
+        {
+            var parser = BBCodeTestUtil.GetCustomParser();
+            var input = "[color=#0000FF:2xgytwj6]Lorem ipsum [url=https%3A%2F%2Fgoogle.com:2xgytwj6]dolor sit amet[/url:2xgytwj6][/color:2xgytwj6], consectetur adipiscing elit";
+            Assert.Equal("Eg==", parser.GetBitField(input, "2xgytwj6"));
+        }
+
+        [Fact]
+        public void GetBitfield_WithoutUid_IsCorrect()
+        {
+            var parser = BBCodeTestUtil.GetCustomParser();
+            var input = "[color=#0000FF]Lorem ipsum [url=https%3A%2F%2Fgoogle.com]dolor sit amet[/url][/color], consectetur adipiscing elit";
+            Assert.Equal("Eg==", parser.GetBitField(input));
         }
     }
 }

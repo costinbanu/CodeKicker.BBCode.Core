@@ -8,7 +8,7 @@ namespace CodeKicker.BBCode.Core
 {
     public static class BBCode
     {
-        static readonly BBCodeParser defaultParser = GetParser();
+        static readonly BBCodeParser defaultParser = GetDefaultParser();
 
         /// <summary>
         /// Transforms the given BBCode into safe HTML with the default configuration from http://codekicker.de
@@ -23,19 +23,19 @@ namespace CodeKicker.BBCode.Core
             return defaultParser.ToHtml(bbCode, code);
         }
 
-        static BBCodeParser GetParser()
+        static BBCodeParser GetDefaultParser()
         {
             return new BBCodeParser(ErrorMode.ErrorFree, null, new[]
                 {
-                    new BBTag("b", "<b>", "</b>"), 
-                    new BBTag("i", "<span style=\"font-style:italic;\">", "</span>"), 
-                    new BBTag("u", "<span style=\"text-decoration:underline;\">", "</span>"), 
-                    new BBTag("code", "<pre class=\"prettyprint\">", "</pre>"), 
-                    new BBTag("img", "<img src=\"${content}\" />", "", false, true), 
-                    new BBTag("quote", "<blockquote>", "</blockquote>"), 
-                    new BBTag("list", "<ul>", "</ul>"), 
-                    new BBTag("*", "<li>", "</li>", true, false), 
-                    new BBTag("url", "<a href=\"${href}\">", "</a>", new BBAttribute("href", ""), new BBAttribute("href", "href")), 
+                    new BBTag("b", "<b>", "</b>", 1), 
+                    new BBTag("i", "<span style=\"font-style:italic;\">", "</span>", 2), 
+                    new BBTag("u", "<span style=\"text-decoration:underline;\">", "</span>", 7), 
+                    new BBTag("code", "<pre class=\"prettyprint\">", "</pre>", 8), 
+                    new BBTag("img", "<img src=\"${content}\" />", "", false, true, 4), 
+                    new BBTag("quote", "<blockquote>", "</blockquote>", 0), 
+                    new BBTag("list", "<ul>", "</ul>", 9), 
+                    new BBTag("*", "<li>", "</li>", true, false, 13), 
+                    new BBTag("url", "<a href=\"${href}\">", "</a>", 3, new BBAttribute("href", ""), new BBAttribute("href", "href")), 
                 });
         }
 

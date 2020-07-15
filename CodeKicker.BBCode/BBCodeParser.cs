@@ -26,11 +26,13 @@ namespace CodeKicker.BBCode.Core
             ErrorMode = errorMode;
             TextNodeHtmlTemplate = textNodeHtmlTemplate;
             Tags = tags;
+            Bitfield = new Bitfield();
         }
 
         public IList<BBTag> Tags { get; private set; }
         public string TextNodeHtmlTemplate { get; private set; }
         public ErrorMode ErrorMode { get; private set; }
+        public Bitfield Bitfield { get; private set; }
 
         public virtual string ToHtml(string bbCode, string code = "")
         {
@@ -45,10 +47,40 @@ namespace CodeKicker.BBCode.Core
             var rootNode = new SequenceNode();
             stack.Push(rootNode);
 
-            int end = 0;
+            IterateInText(bbCode, stack, code);
+
+            while (stack.Count > 1) //close all tags that are still open and can be closed implicitly
+            {
+                var node = (TagNode)stack.Pop();
+                if (node.Tag.RequiresClosingTag && ErrorMode == ErrorMode.Strict) throw new BBCodeParsingException(MessagesHelper.GetString("TagNotClosed", node.Tag.Name));
+            }
+
+            if (stack.Count != 1)
+            {
+                Debug.Assert(ErrorMode != ErrorMode.ErrorFree);
+                throw new BBCodeParsingException(""); //only the root node may be left
+            }
+
+            return rootNode;
+        }
+
+        public string GetBitField(string bbCode, string code = "")
+        {
+            if (bbCode == null) throw new ArgumentNullException("bbCode");
+
+            Stack<SyntaxTreeNode> stack = new Stack<SyntaxTreeNode>();
+            var rootNode = new SequenceNode();
+            stack.Push(rootNode);
+            return IterateInText(bbCode, stack, code).GetBase64();
+        }
+
+        Bitfield IterateInText(string bbCode, Stack<SyntaxTreeNode> stack, string code = "")
+        {
+            var end = 0;
+            var bitfield = new Bitfield();
             while (end < bbCode.Length)
             {
-                if (MatchTagEnd(bbCode, code, ref end, stack))
+                if (MatchTagEnd(bbCode, code, ref end, stack, bitfield))
                     continue;
 
                 if (MatchStartTag(bbCode, code, ref end, stack))
@@ -66,22 +98,10 @@ namespace CodeKicker.BBCode.Core
 
             Debug.Assert(end == bbCode.Length); //assert bbCode was matched entirely
 
-            while (stack.Count > 1) //close all tags that are still open and can be closed implicitly
-            {
-                var node = (TagNode)stack.Pop();
-                if (node.Tag.RequiresClosingTag && ErrorMode == ErrorMode.Strict) throw new BBCodeParsingException(MessagesHelper.GetString("TagNotClosed", node.Tag.Name));
-            }
-
-            if (stack.Count != 1)
-            {
-                Debug.Assert(ErrorMode != ErrorMode.ErrorFree);
-                throw new BBCodeParsingException(""); //only the root node may be left
-            }
-
-            return rootNode;
+            return bitfield;
         }
 
-        bool MatchTagEnd(string bbCode, string code, ref int pos, Stack<SyntaxTreeNode> stack)
+        bool MatchTagEnd(string bbCode, string code, ref int pos, Stack<SyntaxTreeNode> stack, Bitfield bitfield)
         {
             int end = pos;
 
@@ -91,6 +111,10 @@ namespace CodeKicker.BBCode.Core
                 while (true)
                 {
                     var openingNode = stack.Peek() as TagNode; //could also be a SequenceNode
+                    if (openingNode?.Tag?.Id != null)
+                    {
+                        bitfield.Set(openingNode.Tag.Id);
+                    }
                     if (openingNode == null && ErrorOrReturn("TagNotOpened", tagEnd)) return false;
                     Debug.Assert(openingNode != null); //ErrorOrReturn will either or throw make this stack frame exit
 

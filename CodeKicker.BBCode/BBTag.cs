@@ -6,7 +6,7 @@ namespace CodeKicker.BBCode.Core
     {
         public const string ContentPlaceholderName = "content";
 
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, BBTagClosingStyle tagClosingClosingStyle, Func<string, string> contentTransformer, bool enableIterationElementBehavior, params BBAttribute[] attributes)
+        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, BBTagClosingStyle tagClosingClosingStyle, Func<string, string> contentTransformer, bool enableIterationElementBehavior, int id, params BBAttribute[] attributes)
         {
             if (name == null) throw new ArgumentNullException("name");
             if (openTagTemplate == null) throw new ArgumentNullException("openTagTemplate");
@@ -21,25 +21,26 @@ namespace CodeKicker.BBCode.Core
             ContentTransformer = contentTransformer;
             EnableIterationElementBehavior = enableIterationElementBehavior;
             Attributes = attributes ?? new BBAttribute[0];
+            Id = id;
         }
         
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, BBTagClosingStyle tagClosingClosingStyle, Func<string, string> contentTransformer, params BBAttribute[] attributes)
-            : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, tagClosingClosingStyle, contentTransformer, false, attributes)
+        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, BBTagClosingStyle tagClosingClosingStyle, Func<string, string> contentTransformer, int id, params BBAttribute[] attributes)
+            : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, tagClosingClosingStyle, contentTransformer, false, id, attributes)
         {
         }
 
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, bool requireClosingTag, Func<string, string> contentTransformer, params BBAttribute[] attributes)
-            : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, requireClosingTag ? BBTagClosingStyle.RequiresClosingTag : BBTagClosingStyle.AutoCloseElement, contentTransformer, attributes)
+        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, bool requireClosingTag, Func<string, string> contentTransformer, int id, params BBAttribute[] attributes)
+            : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, requireClosingTag ? BBTagClosingStyle.RequiresClosingTag : BBTagClosingStyle.AutoCloseElement, contentTransformer, id, attributes)
         {
         }
 
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, bool requireClosingTag, params BBAttribute[] attributes)
-            : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, requireClosingTag, null, attributes)
+        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, bool requireClosingTag, int id, params BBAttribute[] attributes)
+            : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, requireClosingTag, null, id, attributes)
         {
         }
 
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, params BBAttribute[] attributes)
-            : this(name, openTagTemplate, closeTagTemplate, true, true, attributes)
+        public BBTag(string name, string openTagTemplate, string closeTagTemplate, int id, params BBAttribute[] attributes)
+            : this(name, openTagTemplate, closeTagTemplate, true, true, id, attributes)
         {
         }
 
@@ -58,7 +59,7 @@ namespace CodeKicker.BBCode.Core
         public BBTagClosingStyle TagClosingStyle { get; private set; }
         public Func<string, string> ContentTransformer { get; private set; } //allows for custom modification of the tag content before rendering takes place
         public BBAttribute[] Attributes { get; private set; }
-
+        public int Id { get; private set; }
         public BBAttribute FindAttribute(string name)
         {
             return Array.Find(Attributes, a => a.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
