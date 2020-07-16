@@ -411,5 +411,151 @@ namespace CodeKicker.BBCode.Core.Tests
             var input = "[color=#0000FF]Lorem ipsum [url=https%3A%2F%2Fgoogle.com]dolor sit amet[/url][/color], consectetur adipiscing elit";
             Assert.Equal("Eg==", parser.GetBitField(input));
         }
+
+        [Fact]
+        public void ApplyUid_WhenNoFormatting_IsCorrect()
+        {
+            var text = "some plain text";
+            var parser = BBCodeTestUtil.GetCustomParser();
+            Assert.Equal(text, parser.ToHtml(text));
+        }
+
+        [Fact]
+        public void ApplyUid_WhenSimpleFormatting_IsCorrect()
+        {
+            var text = "[b]simple formatting[/b]";
+            var parser = BBCodeTestUtil.GetCustomParser();
+            var (bbCode, uid) = parser.ApplyUid(text);
+            Assert.Equal($"[b:{uid}]simple formatting[/b:{uid}]", bbCode);
+        }
+
+        [Fact]
+        public void ApplyUid_WhenSimpleFormatting_Whitespace1_IsCorrect()
+        {
+            var text = 
+@"[b]simple     
+     formatting[/b]";
+            var parser = BBCodeTestUtil.GetCustomParser();
+            var (bbCode, uid) = parser.ApplyUid(text);
+            Assert.Equal(
+$@"[b:{uid}]simple     
+     formatting[/b:{uid}]"
+                , bbCode);
+        }
+
+        [Fact]
+        public void ApplyUid_WhenSimpleFormatting_Whitespace2_IsCorrect()
+        {
+            var text =
+@"[b]
+        simple     
+     formatting[/b]";
+            var parser = BBCodeTestUtil.GetCustomParser();
+            var (bbCode, uid) = parser.ApplyUid(text);
+            Assert.Equal(
+$@"[b:{uid}]
+        simple     
+     formatting[/b:{uid}]"
+                , bbCode);
+        }
+
+        [Fact]
+        public void ApplyUid_WhenSimpleFormatting_Whitespace3_IsCorrect()
+        {
+            var text =
+@"[b]simple     
+     formatting
+
+
+[/b]";
+            var parser = BBCodeTestUtil.GetCustomParser();
+            var (bbCode, uid) = parser.ApplyUid(text);
+            Assert.Equal(
+$@"[b:{uid}]simple     
+     formatting
+
+
+[/b:{uid}]"
+                , bbCode);
+        }
+
+        [Fact]
+        public void ApplyUid_WhenComplexFormatting_URL_IsCorrect()
+        {
+            var text = "[url=https://google.com]simple formatting[/url]";
+            var parser = BBCodeTestUtil.GetCustomParser();
+            var (bbCode, uid) = parser.ApplyUid(text);
+            Assert.Equal($"[url=https://google.com:{uid}]simple formatting[/url:{uid}]", bbCode);
+        }
+
+        [Fact]
+        public void ApplyUid_WhenComplexFormatting_UL_IsCorrect()
+        {
+            var text = 
+@"[list]
+    [*]item1
+    [*]item2
+[/list]";
+            var parser = BBCodeTestUtil.GetCustomParser();
+            var (bbCode, uid) = parser.ApplyUid(text);
+            Assert.Equal(
+$@"[list:{uid}]
+    [*:{uid}]item1
+    [*:{uid}]item2
+[/list:{uid}]"
+                , bbCode);
+        }
+
+        [Fact]
+        public void ApplyUid_WhenComplexFormatting_OL_IsCorrect()
+        {
+            var text =
+@"[list=1]
+    [*]item1
+    [*]item2
+[/list]";
+            var parser = BBCodeTestUtil.GetCustomParser();
+            var (bbCode, uid) = parser.ApplyUid(text);
+            Assert.Equal(
+$@"[list=1:{uid}]
+    [*:{uid}]item1
+    [*:{uid}]item2
+[/list:{uid}]"
+                , bbCode);
+        }
+
+        [Fact]
+        public void ApplyUid_WhenNestedFormatting_IsCorrect()
+        {
+            var text = "[b]simple [i]formatting[/i][/b]";
+            var parser = BBCodeTestUtil.GetCustomParser();
+            var (bbCode, uid) = parser.ApplyUid(text);
+            Assert.Equal($"[b:{uid}]simple [i:{uid}]formatting[/i:{uid}][/b:{uid}]", bbCode);
+        }
+
+        [Fact]
+        public void ApplyUid_WhenWrongFormatting_Nesting_IsCorrect()
+        {
+            var text = "[b]simple [i]formatting[/b][/i]";
+            var parser = BBCodeTestUtil.GetCustomParser();
+            var (bbCode, uid) = parser.ApplyUid(text);
+            Assert.Equal(text, bbCode);
+            Assert.NotNull(uid);
+            Assert.Empty(uid);
+        }
+
+        [Theory]
+        [InlineData("[b]simple [iformatting[/b][/i]")]
+        [InlineData("[b]simple [x]formatting[/x][/i]")]
+        [InlineData("[b]simple [x]formatting[/y][/i]")]
+        [InlineData("[b]simple [b]formatting[/y][/i]")]
+        public void ApplyUid_WhenWrongFormatting_Typo_IsCorrect(string text)
+        {
+            var parser = BBCodeTestUtil.GetCustomParser();
+            var (bbCode, uid) = parser.ApplyUid(text);
+            Assert.Equal(text, bbCode);
+            Assert.NotNull(uid);
+            Assert.Empty(uid);
+        }
     }
 }

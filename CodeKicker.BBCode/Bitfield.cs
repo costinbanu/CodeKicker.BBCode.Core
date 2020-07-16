@@ -69,18 +69,5 @@ namespace CodeKicker.BBCode.Core
         {
             return Convert.ToBase64String(_data.ToCharArray().Select(x => (byte)x).ToArray());
         }
-
-        public string GetBin()
-        {
-            var bin = "";
-            var len = _data.Length;
-
-            for (var i = 0; i < len; ++i)
-            {
-                bin += new string('\0', 8) + Convert.ToString(_data[i], 2);
-            }
-
-            return bin;
-        }
     }
 }

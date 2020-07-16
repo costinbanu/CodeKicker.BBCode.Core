@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 
 namespace CodeKicker.BBCode.Core
 {
@@ -71,13 +72,74 @@ namespace CodeKicker.BBCode.Core
             Stack<SyntaxTreeNode> stack = new Stack<SyntaxTreeNode>();
             var rootNode = new SequenceNode();
             stack.Push(rootNode);
-            return IterateInText(bbCode, stack, code).GetBase64();
+            return IterateInText(bbCode, stack, code, true).GetBase64();
         }
 
-        Bitfield IterateInText(string bbCode, Stack<SyntaxTreeNode> stack, string code = "")
+        public (string bbCode, string uid) ApplyUid(string bbCode, int uidLength = 8)
+        {
+            int LastNonWhiteSpace(int pos)
+            {
+                while (pos - 1 > 0 && char.IsWhiteSpace(bbCode[pos - 1]))
+                {
+                    pos--;
+                }
+                return pos;
+            }
+
+            try
+            {
+                var uid = ToBase36(Math.Abs(Convert.ToInt64($"0x{Guid.NewGuid().ToString("n").Substring(4, 16)}", 16))).Substring(0, uidLength);
+                var end = 0;
+                var pos = 0;
+                var error = false;
+                var stack = new Stack<SyntaxTreeNode>();
+                var rootNode = new SequenceNode();
+                stack.Push(rootNode);
+                var result = new StringBuilder();
+                while (end < bbCode.Length)
+                {
+                    if (MatchStartTag(bbCode, uid, ref end, stack))
+                    {
+                        var actualEnd = LastNonWhiteSpace(end);
+                        result.Append(bbCode.Substring(pos, actualEnd - pos - 1)).Append($":{uid}]");
+                        pos = actualEnd;
+                        continue;
+                    }
+                    if (MatchTagEnd(bbCode, uid, ref end, stack))
+                    {
+                        var actualEnd = LastNonWhiteSpace(end);
+                        result.Append(bbCode.Substring(pos, actualEnd - pos - 1)).Append($":{uid}]");
+                        pos = end;
+                        continue;
+                    }
+                    if (MatchTextNode(bbCode, ref end, stack))
+                    {
+                        result.Append(bbCode.Substring(pos, end - pos));
+                        pos = end;
+                        continue;
+                    }
+                    error = true;
+                    end++;
+                }
+                if (error)
+                {
+                    return (bbCode, string.Empty);
+                }
+                else
+                {
+                    return (result.ToString(), uid);
+                }
+            }
+            catch
+            {
+                return (bbCode, string.Empty);
+            }
+        }
+
+        Bitfield IterateInText(string bbCode, Stack<SyntaxTreeNode> stack, string code = "", bool setBitfield = false)
         {
             var end = 0;
-            var bitfield = new Bitfield();
+            var bitfield = setBitfield ? new Bitfield() : null;
             while (end < bbCode.Length)
             {
                 if (MatchTagEnd(bbCode, code, ref end, stack, bitfield))
@@ -101,7 +163,21 @@ namespace CodeKicker.BBCode.Core
             return bitfield;
         }
 
-        bool MatchTagEnd(string bbCode, string code, ref int pos, Stack<SyntaxTreeNode> stack, Bitfield bitfield)
+        string ToBase36(long value)
+        {
+            var chars = "0123456789abcdefghijklmnopqrstuvwxyz"; 
+            var result = new StringBuilder();
+
+            while (value > 0L)
+            {
+                result.Insert(0, chars[unchecked((int)(value % 36L))]);
+                value /= 36L;
+            }
+
+            return result.ToString();
+        }
+
+        bool MatchTagEnd(string bbCode, string code, ref int pos, Stack<SyntaxTreeNode> stack, Bitfield bitfield = null)
         {
             int end = pos;
 
@@ -111,7 +187,7 @@ namespace CodeKicker.BBCode.Core
                 while (true)
                 {
                     var openingNode = stack.Peek() as TagNode; //could also be a SequenceNode
-                    if (openingNode?.Tag?.Id != null)
+                    if (bitfield != null && openingNode?.Tag?.Id != null)
                     {
                         bitfield.Set(openingNode.Tag.Id);
                     }
