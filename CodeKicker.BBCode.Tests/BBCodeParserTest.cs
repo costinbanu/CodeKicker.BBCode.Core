@@ -46,24 +46,8 @@ namespace CodeKicker.BBCode.Core.Tests
             Assert.Equal("xxxyyy", BBEncodeForTest("[placeholder]", ErrorMode.Strict));
             Assert.Equal("axxxyyyb", BBEncodeForTest("a[placeholder]b", ErrorMode.Strict));
             Assert.Equal("<b>a</b>xxxyyy<b>b</b>", BBEncodeForTest("[b]a[/b][placeholder][b]b[/b]", ErrorMode.Strict));
-
-            try
-            {
-                BBEncodeForTest("[placeholder][/placeholder]", ErrorMode.Strict);
-                
-            }
-            catch (BBCodeParsingException)
-            {
-            }
-
-            try
-            {
-                BBEncodeForTest("[placeholder/]", ErrorMode.Strict);
-                
-            }
-            catch (BBCodeParsingException)
-            {
-            }
+            Assert.Throws<BBCodeParsingException>(() => BBEncodeForTest("[placeholder][/placeholder]", ErrorMode.Strict));
+            Assert.Throws<BBCodeParsingException>(() => BBEncodeForTest("[placeholder/]", ErrorMode.Strict));
         }
 
         [Fact]
@@ -93,15 +77,7 @@ namespace CodeKicker.BBCode.Core.Tests
             Assert.Equal("<li>1</li><li>2</li>", BBEncodeForTest("[*]1[*]2", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
             Assert.Equal("<li>1<b>a</b></li><li>2</li>", BBEncodeForTest("[*]1[b]a[/b][*]2", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
             Assert.Equal("<li>1<b>a</b></li><li>2</li>", BBEncodeForTest("[*]1[b]a[*]2", ErrorMode.ErrorFree, BBTagClosingStyle.AutoCloseElement, true));
-
-            try
-            {
-                BBEncodeForTest("[*]1[b]a[*]2", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true);
-                
-            }
-            catch (BBCodeParsingException)
-            {
-            }
+            Assert.Throws<BBCodeParsingException>(() => BBEncodeForTest("[*]1[b]a[*]2", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
         }
 
         [Fact]
@@ -214,9 +190,7 @@ namespace CodeKicker.BBCode.Core.Tests
             {
                 tree = parser.ParseSyntaxTree(RandomValue.String());
             }
-#pragma warning disable 168
-            catch (BBCodeParsingException e)
-#pragma warning restore 168
+            catch (BBCodeParsingException)
             {
                 tree = null;
             }
@@ -235,9 +209,7 @@ namespace CodeKicker.BBCode.Core.Tests
             {
                 tree = parser.ParseSyntaxTree(RandomValue.String());
             }
-#pragma warning disable 168
-            catch (BBCodeParsingException e)
-#pragma warning restore 168
+            catch (BBCodeParsingException)
             {
                 return;
             }
@@ -413,7 +385,7 @@ namespace CodeKicker.BBCode.Core.Tests
         }
 
         [Fact]
-        public void ApplyUid_WhenNoFormatting_IsCorrect()
+        public void BackwardsCompatibility_WhenNoFormatting_IsCorrect()
         {
             var text = "some plain text";
             var parser = BBCodeTestUtil.GetCustomParser();
@@ -421,22 +393,22 @@ namespace CodeKicker.BBCode.Core.Tests
         }
 
         [Fact]
-        public void ApplyUid_WhenSimpleFormatting_IsCorrect()
+        public void BackwardsCompatibility_WhenSimpleFormatting_IsCorrect()
         {
             var text = "[b]simple formatting[/b]";
             var parser = BBCodeTestUtil.GetCustomParser();
-            var (bbCode, uid) = parser.ApplyUid(text);
+            var (bbCode, uid) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal($"[b:{uid}]simple formatting[/b:{uid}]", bbCode);
         }
 
         [Fact]
-        public void ApplyUid_WhenSimpleFormatting_Whitespace1_IsCorrect()
+        public void BackwardsCompatibility_WhenSimpleFormatting_Whitespace1_IsCorrect()
         {
             var text = 
 @"[b]simple     
      formatting[/b]";
             var parser = BBCodeTestUtil.GetCustomParser();
-            var (bbCode, uid) = parser.ApplyUid(text);
+            var (bbCode, uid) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(
 $@"[b:{uid}]simple     
      formatting[/b:{uid}]"
@@ -444,14 +416,14 @@ $@"[b:{uid}]simple
         }
 
         [Fact]
-        public void ApplyUid_WhenSimpleFormatting_Whitespace2_IsCorrect()
+        public void BackwardsCompatibility_WhenSimpleFormatting_Whitespace2_IsCorrect()
         {
             var text =
 @"[b]
         simple     
      formatting[/b]";
             var parser = BBCodeTestUtil.GetCustomParser();
-            var (bbCode, uid) = parser.ApplyUid(text);
+            var (bbCode, uid) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(
 $@"[b:{uid}]
         simple     
@@ -460,7 +432,7 @@ $@"[b:{uid}]
         }
 
         [Fact]
-        public void ApplyUid_WhenSimpleFormatting_Whitespace3_IsCorrect()
+        public void BackwardsCompatibility_WhenSimpleFormatting_Whitespace3_IsCorrect()
         {
             var text =
 @"[b]simple     
@@ -469,7 +441,7 @@ $@"[b:{uid}]
 
 [/b]";
             var parser = BBCodeTestUtil.GetCustomParser();
-            var (bbCode, uid) = parser.ApplyUid(text);
+            var (bbCode, uid) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(
 $@"[b:{uid}]simple     
      formatting
@@ -480,34 +452,58 @@ $@"[b:{uid}]simple
         }
 
         [Fact]
-        public void ApplyUid_WhenComplexFormatting_URL_IsCorrect()
+        public void BackwardsCompatibility_WhenComplexFormatting_URL_IsCorrect()
         {
             var text = "[url=https://google.com]simple formatting[/url]";
             var parser = BBCodeTestUtil.GetCustomParser();
-            var (bbCode, uid) = parser.ApplyUid(text);
+            var (bbCode, uid) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal($"[url=https://google.com:{uid}]simple formatting[/url:{uid}]", bbCode);
         }
 
         [Fact]
-        public void ApplyUid_WhenComplexFormatting_UL_IsCorrect()
+        public void BackwardsCompatibility_WhenComplexFormatting_UL_Test1_IsCorrect()
         {
-            var text = 
+            var text =
 @"[list]
     [*]item1
     [*]item2
 [/list]";
             var parser = BBCodeTestUtil.GetCustomParser();
-            var (bbCode, uid) = parser.ApplyUid(text);
+            var (bbCode, uid) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(
 $@"[list:{uid}]
-    [*:{uid}]item1
-    [*:{uid}]item2
+    [*:{uid}]item1[/*:{uid}]
+    [*:{uid}]item2[/*:{uid}]
 [/list:{uid}]"
                 , bbCode);
         }
 
         [Fact]
-        public void ApplyUid_WhenComplexFormatting_OL_IsCorrect()
+        public void BackwardsCompatibility_WhenComplexFormatting_UL_Test2_IsCorrect()
+        {
+            var text =
+@"[url=https://google.com]some url right here[/url][list]
+    [*][b]item1[/b]
+    [*]item2
+    [*]item3
+    [*][b][i]item3[/i] is not over yet[/b]
+    [*]item4
+[/list]";
+            var parser = BBCodeTestUtil.GetCustomParser();
+            var (bbCode, uid) = parser.TransformForBackwardsCompatibility(text);
+            Assert.Equal(
+$@"[url=https://google.com:{uid}]some url right here[/url:{uid}][list:{uid}]
+    [*:{uid}][b:{uid}]item1[/b:{uid}][/*:{uid}]
+    [*:{uid}]item2[/*:{uid}]
+    [*:{uid}]item3[/*:{uid}]
+    [*:{uid}][b:{uid}][i:{uid}]item3[/i:{uid}] is not over yet[/b:{uid}][/*:{uid}]
+    [*:{uid}]item4[/*:{uid}]
+[/list:{uid}]"
+                , bbCode);
+        }
+
+        [Fact]
+        public void BackwardsCompatibility_WhenComplexFormatting_OL_IsCorrect()
         {
             var text =
 @"[list=1]
@@ -515,30 +511,30 @@ $@"[list:{uid}]
     [*]item2
 [/list]";
             var parser = BBCodeTestUtil.GetCustomParser();
-            var (bbCode, uid) = parser.ApplyUid(text);
+            var (bbCode, uid) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(
 $@"[list=1:{uid}]
-    [*:{uid}]item1
-    [*:{uid}]item2
+    [*:{uid}]item1[/*:{uid}]
+    [*:{uid}]item2[/*:{uid}]
 [/list:{uid}]"
                 , bbCode);
         }
 
         [Fact]
-        public void ApplyUid_WhenNestedFormatting_IsCorrect()
+        public void BackwardsCompatibility_WhenNestedFormatting_IsCorrect()
         {
             var text = "[b]simple [i]formatting[/i][/b]";
             var parser = BBCodeTestUtil.GetCustomParser();
-            var (bbCode, uid) = parser.ApplyUid(text);
+            var (bbCode, uid) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal($"[b:{uid}]simple [i:{uid}]formatting[/i:{uid}][/b:{uid}]", bbCode);
         }
 
         [Fact]
-        public void ApplyUid_WhenWrongFormatting_Nesting_IsCorrect()
+        public void BackwardsCompatibility_WhenWrongFormatting_Nesting_IsCorrect()
         {
             var text = "[b]simple [i]formatting[/b][/i]";
             var parser = BBCodeTestUtil.GetCustomParser();
-            var (bbCode, uid) = parser.ApplyUid(text);
+            var (bbCode, uid) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(text, bbCode);
             Assert.NotNull(uid);
             Assert.Empty(uid);
@@ -549,10 +545,10 @@ $@"[list=1:{uid}]
         [InlineData("[b]simple [x]formatting[/x][/i]")]
         [InlineData("[b]simple [x]formatting[/y][/i]")]
         [InlineData("[b]simple [b]formatting[/y][/i]")]
-        public void ApplyUid_WhenWrongFormatting_Typo_IsCorrect(string text)
+        public void BackwardsCompatibility_WhenWrongFormatting_Typo_IsCorrect(string text)
         {
             var parser = BBCodeTestUtil.GetCustomParser();
-            var (bbCode, uid) = parser.ApplyUid(text);
+            var (bbCode, uid) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(text, bbCode);
             Assert.NotNull(uid);
             Assert.Empty(uid);

@@ -14,19 +14,14 @@ namespace CodeKicker.BBCode.Core
     /// </summary>
     public class BBCodeParser
     {
-        public BBCodeParser(IList<BBTag> tags)
-            : this(ErrorMode.ErrorFree, null, tags)
-        {
-        }
+        public BBCodeParser(IList<BBTag> tags) : this(ErrorMode.ErrorFree, null, tags) { }
 
         public BBCodeParser(ErrorMode errorMode, string textNodeHtmlTemplate, IList<BBTag> tags)
         {
             if (!Enum.IsDefined(typeof(ErrorMode), errorMode)) throw new ArgumentOutOfRangeException("errorMode");
-            if (tags == null) throw new ArgumentNullException("tags");
-
             ErrorMode = errorMode;
             TextNodeHtmlTemplate = textNodeHtmlTemplate;
-            Tags = tags;
+            Tags = tags ?? throw new ArgumentNullException("tags");
             Bitfield = new Bitfield();
         }
 
@@ -40,6 +35,7 @@ namespace CodeKicker.BBCode.Core
             if (bbCode == null) throw new ArgumentNullException("bbCode");
             return ParseSyntaxTree(bbCode, code).ToHtml();
         }
+
         public virtual SequenceNode ParseSyntaxTree(string bbCode, string code = "")
         {
             if (bbCode == null) throw new ArgumentNullException("bbCode");
@@ -75,11 +71,17 @@ namespace CodeKicker.BBCode.Core
             return IterateInText(bbCode, stack, code, true).GetBase64();
         }
 
-        public (string bbCode, string uid) ApplyUid(string bbCode, int uidLength = 8)
+        /// <summary>
+        /// Transforms a bbcode text so that it will be readable by at least a phpbb 3.0.x platform
+        /// </summary>
+        /// <param name="text">text with bb code</param>
+        /// <param name="uidLength"> bbcode uid length</param>
+        /// <returns><see cref="Tuple{T1, T2}"/> where first item is the transformed text (<see cref="string"/>), and the second is the bbcode uid field (<see cref="string"/>)</returns>
+        public (string bbCode, string uid) TransformForBackwardsCompatibility(string text, int uidLength = 8)
         {
-            int LastNonWhiteSpace(int pos)
+            int lastNonWhiteSpace(int pos)
             {
-                while (pos - 1 > 0 && char.IsWhiteSpace(bbCode[pos - 1]))
+                while (pos - 1 > 0 && char.IsWhiteSpace(text[pos - 1]))
                 {
                     pos--;
                 }
@@ -96,26 +98,47 @@ namespace CodeKicker.BBCode.Core
                 var rootNode = new SequenceNode();
                 stack.Push(rootNode);
                 var result = new StringBuilder();
-                while (end < bbCode.Length)
+                TagNode lastOpenNonClosingTag = null;
+                while (end < text.Length)
                 {
-                    if (MatchStartTag(bbCode, uid, ref end, stack))
+                    if (MatchStartTag(text, uid, ref end, stack))
                     {
-                        var actualEnd = LastNonWhiteSpace(end);
-                        result.Append(bbCode.Substring(pos, actualEnd - pos - 1)).Append($":{uid}]");
+                        var actualEnd = lastNonWhiteSpace(end);
+                        result.Append(text.Substring(pos, actualEnd - pos - 1)).Append($":{uid}]");
                         pos = actualEnd;
+                        var tag = stack.Peek() as TagNode;
+                        if (!(tag?.Tag?.RequiresClosingTag ?? true))
+                        {
+                            lastOpenNonClosingTag = tag;
+                        }
                         continue;
                     }
-                    if (MatchTagEnd(bbCode, uid, ref end, stack))
+                    if (MatchTextNode(text, ref end, stack))
                     {
-                        var actualEnd = LastNonWhiteSpace(end);
-                        result.Append(bbCode.Substring(pos, actualEnd - pos - 1)).Append($":{uid}]");
-                        pos = end;
+                        if (lastOpenNonClosingTag != null && lastOpenNonClosingTag?.Tag?.Name == (stack.Peek() as TagNode)?.Tag?.Name)
+                        {
+                            var actualEnd = lastNonWhiteSpace(end);
+                            result.Append(text[pos..actualEnd]).Append($"[/{lastOpenNonClosingTag.Tag.Name}:{uid}]").Append(text[actualEnd..end]);
+                            pos = end;
+                            lastOpenNonClosingTag = null;
+                        }
+                        else
+                        {
+                            result.Append(text[pos..end]);
+                            pos = end;
+                        }
                         continue;
                     }
-                    if (MatchTextNode(bbCode, ref end, stack))
+                    if (MatchTagEnd(text, uid, ref end, stack))
                     {
-                        result.Append(bbCode.Substring(pos, end - pos));
+                        var actualEnd = lastNonWhiteSpace(end);
+                        result.Append(text.Substring(pos, actualEnd - pos - 1)).Append($":{uid}]");
                         pos = end;
+                        if (lastOpenNonClosingTag != null && lastOpenNonClosingTag?.Tag?.Name == (stack.Peek() as TagNode)?.Tag?.Name)
+                        {
+                            result.Append($"[/{lastOpenNonClosingTag.Tag.Name}:{uid}]");
+                            lastOpenNonClosingTag = null;
+                        }
                         continue;
                     }
                     error = true;
@@ -123,7 +146,7 @@ namespace CodeKicker.BBCode.Core
                 }
                 if (error)
                 {
-                    return (bbCode, string.Empty);
+                    return (text, string.Empty);
                 }
                 else
                 {
@@ -132,7 +155,7 @@ namespace CodeKicker.BBCode.Core
             }
             catch
             {
-                return (bbCode, string.Empty);
+                return (text, string.Empty);
             }
         }
 
@@ -410,7 +433,7 @@ namespace CodeKicker.BBCode.Core
                     throw new BBCodeParsingException("");
             }
 
-            var result = input.Substring(pos, end - pos);
+            var result = input[pos..end];
 
             if (anyEscapeFound)
             {
@@ -450,23 +473,10 @@ namespace CodeKicker.BBCode.Core
         {
             int end = pos;
             for (; end < input.Length && (char.ToLower(input[end]) >= 'a' && char.ToLower(input[end]) <= 'z' || (input[end]) >= '0' && (input[end]) <= '9' || input[end] == '*' || input[end] == '-'); end++) ;
-            //var start = end;
-            //if (start < input.Length && input[end] == ':')
-            //{
-            //    while (start < input.Length)
-            //    {
-            //        if ((input[start] == ':' && input.Substring(start + 1, code.Length) == code) ||
-            //            input[start] == '=')
-            //        {
-            //            break;
-            //        }
-            //        start++;
-            //    }
-            //}
 
             if (end - pos == 0) return null;
 
-            var result = input.Substring(pos, end - pos);
+            var result = input[pos..end];
 
             pos = end;
             return result;
@@ -498,7 +508,7 @@ namespace CodeKicker.BBCode.Core
             }
 
             var valStart = pos + 1;
-            var result = input.Substring(valStart, endIndex - valStart);
+            var result = input[valStart..endIndex];
             pos = endIndex + diff;
             return result;
         }

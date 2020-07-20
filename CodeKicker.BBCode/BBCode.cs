@@ -105,7 +105,7 @@ namespace CodeKicker.BBCode.Core
                     if (r.Index > text.Length - r.Length) throw new ArgumentException("every replacement text span must reference a range within the text node");
 
                     if (r.Index != lastPos)
-                        replacementNodes.Add(new TextNode(text.Substring(lastPos, r.Index - lastPos)));
+                        replacementNodes.Add(new TextNode(text[lastPos..r.Index]));
 
                     if (r.Replacement != null)
                         replacementNodes.Add(r.Replacement);

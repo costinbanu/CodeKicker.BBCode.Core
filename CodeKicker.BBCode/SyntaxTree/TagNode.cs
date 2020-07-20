@@ -15,8 +15,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
         public TagNode(BBTag tag, IEnumerable<SyntaxTreeNode> subNodes)
             : base(subNodes)
         {
-            if (tag == null) throw new ArgumentNullException("tag");
-            Tag = tag;
+            Tag = tag ?? throw new ArgumentNullException("tag");
             AttributeValues = new Dictionary<BBAttribute, string>();
         }
 

@@ -15,8 +15,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
         public TextNode(string text, string htmlTemplate)
             : base(null)
         {
-            if (text == null) throw new ArgumentNullException("text");
-            Text = text;
+            Text = text ?? throw new ArgumentNullException("text");
             HtmlTemplate = htmlTemplate;
         }
 
