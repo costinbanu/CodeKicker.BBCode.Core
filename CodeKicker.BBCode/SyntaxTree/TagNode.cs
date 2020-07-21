@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Data;
 using System.Web;
+using System.Text;
 
 namespace CodeKicker.BBCode.Core.SyntaxTree
 {
@@ -43,7 +44,45 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
                 if (attrKvp.Key.Name == "") continue;
                 attrs += " " + attrKvp.Key.Name + "=" + attrKvp.Value;
             }
-            return "[" + Tag.Name + attrs + "]" + content + "[/" + Tag.Name + "]";
+            var toReturn = new StringBuilder("[").Append(Tag.Name).Append(attrs);
+            if (!string.IsNullOrWhiteSpace(Tag.BBCodeUid))
+            {
+                toReturn.Append(":").Append(Tag.BBCodeUid);
+            }
+
+            string nonEmptyContent = content, trailingWhitespace = "";
+            if (Tag.EnableIterationElementBehavior && !string.IsNullOrWhiteSpace(content) && char.IsWhiteSpace(content[^1]))
+            {
+                var pos = content.Length - 1;
+                while(char.IsWhiteSpace(content[pos]) && pos > 0)
+                {
+                    pos--;
+                }
+                nonEmptyContent = content[0..(pos + 1)];
+                trailingWhitespace = content.Substring(pos + 1);
+            }
+
+            toReturn.Append("]").Append(nonEmptyContent).Append("[/").Append(Tag.Name);
+            if(!string.IsNullOrWhiteSpace(Tag.BBCodeUid))
+            {
+                toReturn.Append(":");
+                switch (true)
+                {
+                    case bool _ when Tag.Name.Equals("*", StringComparison.OrdinalIgnoreCase): 
+                        toReturn.Append("m:"); 
+                        break;
+                    case bool _ when Tag.Name.Equals("list", StringComparison.OrdinalIgnoreCase) && AttributeValues.Any():
+                        toReturn.Append("o:");
+                        break;
+                    case bool _ when Tag.Name.Equals("list", StringComparison.OrdinalIgnoreCase) && !AttributeValues.Any():
+                        toReturn.Append("u:");
+                        break;
+                    default: break;
+                }
+                toReturn.Append(Tag.BBCodeUid);
+            }
+            toReturn.Append("]").Append(trailingWhitespace);
+            return toReturn.ToString();
         }
         public override string ToText()
         {
@@ -122,8 +161,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
 
         string TryGetValue(BBAttribute attr)
         {
-            string val;
-            AttributeValues.TryGetValue(attr, out val);
+            AttributeValues.TryGetValue(attr, out string val);
             return val;
         }
 
@@ -165,8 +203,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
 
             public string GetAttributeValueByID(string id)
             {
-                string value;
-                if (!GetAttributeValueByIDData.TryGetValue(id, out value)) return null;
+                if (!GetAttributeValueByIDData.TryGetValue(id, out string value)) return null;
                 return value;
             }
         }

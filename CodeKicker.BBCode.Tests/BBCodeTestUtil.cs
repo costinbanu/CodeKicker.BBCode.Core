@@ -76,9 +76,9 @@ namespace CodeKicker.BBCode.Core.Tests
                     new BBTag("quote", "<blockquote>", "</blockquote>", 0), 
                     new BBTag("list", "<ul>", "</ul>", 9), 
                     new BBTag("*", "<li>", "</li>", true, listItemBBTagClosingStyle, null, enableIterationElementBehavior, 13), 
-                    new BBTag("url", "<a href=\"${href}\">", "</a>", 3, new BBAttribute("href", ""), new BBAttribute("href", "href")), 
-                    new BBTag("url2", "<a href=\"${href}\">", "</a>", 14, new BBAttribute("href", "", GetUrl2Href), new BBAttribute("href", "href", GetUrl2Href)), 
-                    !includePlaceholder ? null : new BBTag("placeholder", "${name}", "", false, BBTagClosingStyle.LeafElementWithoutContent, null, 15, new BBAttribute("name", "", name => "xxx" + name.AttributeValue + "yyy")), 
+                    new BBTag("url", "<a href=\"${href}\">", "</a>", 3, "", new BBAttribute("href", ""), new BBAttribute("href", "href")), 
+                    new BBTag("url2", "<a href=\"${href}\">", "</a>", 14, "", new BBAttribute("href", "", GetUrl2Href), new BBAttribute("href", "href", GetUrl2Href)), 
+                    !includePlaceholder ? null : new BBTag("placeholder", "${name}", "", false, BBTagClosingStyle.LeafElementWithoutContent, null, 15, "", new BBAttribute("name", "", name => "xxx" + name.AttributeValue + "yyy")), 
                 }.Where(x => x != null).ToArray());
         }
 
@@ -91,18 +91,18 @@ namespace CodeKicker.BBCode.Core.Tests
                     new BBTag("u", "<u>", "</u>", 7),
                     new BBTag("code", "<pre class=\"prettyprint\">", "</pre>", 8),
                     new BBTag("img", "<br/><img src=\"${content}\" /><br/>", string.Empty, false, false, 4),
-                    new BBTag("quote", "<blockquote class=\"PostQuote\">${name}", "</blockquote>", 0,
+                    new BBTag("quote", "<blockquote class=\"PostQuote\">${name}", "</blockquote>", 0, "",
                         new BBAttribute("name", "", (a) => string.IsNullOrWhiteSpace(a.AttributeValue) ? "" : $"<b>{HttpUtility.HtmlDecode(a.AttributeValue).Trim('"')}</b> wrote:<br/>")) { GreedyAttributeProcessing = true },
-                    new BBTag("*", "<li>", "</li>", true, false, 13),
-                    new BBTag("list", "<${attr}>", "</${attr}>", true, true, 9,
+                    new BBTag("*", "<li>", "</li>", true, BBTagClosingStyle.AutoCloseElement, null, true, 13),
+                    new BBTag("list", "<${attr}>", "</${attr}>", true, true, 9, "",
                         new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\"")),
-                    new BBTag("url", "<a href=\"${href}\" target=\"_blank\">", "</a>", 3,
+                    new BBTag("url", "<a href=\"${href}\" target=\"_blank\">", "</a>", 3, "",
                         new BBAttribute("href", "", a => string.IsNullOrWhiteSpace(a?.AttributeValue) ? "${content}" : a.AttributeValue)),
-                    new BBTag("color", "<span style=\"color:${code}\">", "</span>", 6,
+                    new BBTag("color", "<span style=\"color:${code}\">", "</span>", 6, "",
                         new BBAttribute("code", "")),
-                    new BBTag("size", "<span style=\"font-size:${fsize}\">", "</span>", 5,
+                    new BBTag("size", "<span style=\"font-size:${fsize}\">", "</span>", 5, "",
                         new BBAttribute("fsize", "", a => decimal.TryParse(a?.AttributeValue, out var val) ? FormattableString.Invariant($"{val / 100m:#.##}em") : "1em")),
-                    new BBTag("attachment", "#{AttachmentFileName=${content}/AttachmentIndex=${num}}#", "", false, true, 12,
+                    new BBTag("attachment", "#{AttachmentFileName=${content}/AttachmentIndex=${num}}#", "", false, true, 12, "",
                         new BBAttribute("num", ""))
             });
         }
@@ -121,7 +121,7 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             return new BBCodeParser(errorMode, null, new[]
                 {
-                    new BBTag("x", "${content}${x}", "${y}", true, true, 1, new BBAttribute("x", "x"), new BBAttribute("y", "y", x => x.AttributeValue)), 
+                    new BBTag("x", "${content}${x}", "${y}", true, true, 1, "", new BBAttribute("x", "x"), new BBAttribute("y", "y", x => x.AttributeValue)), 
                 });
         }
 

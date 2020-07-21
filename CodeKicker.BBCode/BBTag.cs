@@ -6,7 +6,7 @@ namespace CodeKicker.BBCode.Core
     {
         public const string ContentPlaceholderName = "content";
 
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, BBTagClosingStyle tagClosingClosingStyle, Func<string, string> contentTransformer, bool enableIterationElementBehavior, int id, params BBAttribute[] attributes)
+        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, BBTagClosingStyle tagClosingClosingStyle, Func<string, string> contentTransformer, bool enableIterationElementBehavior, int id, string bbcodeUid = "", params BBAttribute[] attributes)
         {
             if (!Enum.IsDefined(typeof(BBTagClosingStyle), tagClosingClosingStyle)) throw new ArgumentException("tagClosingClosingStyle");
 
@@ -19,25 +19,26 @@ namespace CodeKicker.BBCode.Core
             EnableIterationElementBehavior = enableIterationElementBehavior;
             Attributes = attributes ?? new BBAttribute[0];
             Id = id;
+            BBCodeUid = bbcodeUid;
         }
         
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, BBTagClosingStyle tagClosingClosingStyle, Func<string, string> contentTransformer, int id, params BBAttribute[] attributes)
-            : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, tagClosingClosingStyle, contentTransformer, false, id, attributes)
+        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, BBTagClosingStyle tagClosingClosingStyle, Func<string, string> contentTransformer, int id, string bbcodeUid = "", params BBAttribute[] attributes)
+            : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, tagClosingClosingStyle, contentTransformer, false, id, bbcodeUid, attributes)
         {
         }
 
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, bool requireClosingTag, Func<string, string> contentTransformer, int id, params BBAttribute[] attributes)
-            : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, requireClosingTag ? BBTagClosingStyle.RequiresClosingTag : BBTagClosingStyle.AutoCloseElement, contentTransformer, id, attributes)
+        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, bool requireClosingTag, Func<string, string> contentTransformer, int id, string bbcodeUid = "", params BBAttribute[] attributes)
+            : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, requireClosingTag ? BBTagClosingStyle.RequiresClosingTag : BBTagClosingStyle.AutoCloseElement, contentTransformer, id, bbcodeUid, attributes)
         {
         }
 
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, bool requireClosingTag, int id, params BBAttribute[] attributes)
-            : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, requireClosingTag, null, id, attributes)
+        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, bool requireClosingTag, int id, string bbcodeUid = "", params BBAttribute[] attributes)
+            : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, requireClosingTag, null, id, bbcodeUid, attributes)
         {
         }
 
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, int id, params BBAttribute[] attributes)
-            : this(name, openTagTemplate, closeTagTemplate, true, true, id, attributes)
+        public BBTag(string name, string openTagTemplate, string closeTagTemplate, int id, string bbcodeUid = "", params BBAttribute[] attributes)
+            : this(name, openTagTemplate, closeTagTemplate, true, true, id, bbcodeUid, attributes)
         {
         }
 
@@ -57,6 +58,8 @@ namespace CodeKicker.BBCode.Core
         public Func<string, string> ContentTransformer { get; private set; } //allows for custom modification of the tag content before rendering takes place
         public BBAttribute[] Attributes { get; private set; }
         public int Id { get; private set; }
+        public string BBCodeUid { get; }
+
         public BBAttribute FindAttribute(string name)
         {
             return Array.Find(Attributes, a => a.Name.Equals(name, StringComparison.OrdinalIgnoreCase));

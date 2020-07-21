@@ -24,11 +24,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
 
         public override string ToHtml()
         {
-            // Right-oh, future Paul - the below doesn't do anything sensible with newlines but the obvious 'replace newlines with BRs' tactic
-            // doesn't work because you don't want to do it in all circumstances. Need to add a 'suppress BR after' property or similar to 
-            // BBTag? This'd control if we trim the first newline after a tag of that type closes. We could *then* replace all \n with <br /> and
-            // be on our merry way
-            return (HtmlTemplate == null ? HttpUtility.HtmlEncode(Text) : HtmlTemplate.Replace("${content}", HttpUtility.HtmlEncode(Text))).Replace("\n", "<br />");
+            return (HtmlTemplate == null ? HttpUtility.HtmlEncode(Text) : HtmlTemplate.Replace("${content}", HttpUtility.HtmlEncode(Text))).Replace(Environment.NewLine, "<br />");
         }
         public override string ToBBCode()
         {

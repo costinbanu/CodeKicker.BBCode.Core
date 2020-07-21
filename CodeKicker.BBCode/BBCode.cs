@@ -35,7 +35,7 @@ namespace CodeKicker.BBCode.Core
                     new BBTag("quote", "<blockquote>", "</blockquote>", 0), 
                     new BBTag("list", "<ul>", "</ul>", 9), 
                     new BBTag("*", "<li>", "</li>", true, false, 13), 
-                    new BBTag("url", "<a href=\"${href}\">", "</a>", 3, new BBAttribute("href", ""), new BBAttribute("href", "href")), 
+                    new BBTag("url", "<a href=\"${href}\">", "</a>", 3, "", new BBAttribute("href", ""), new BBAttribute("href", "href")), 
                 });
         }
 
