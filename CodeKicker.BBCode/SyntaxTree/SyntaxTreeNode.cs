@@ -30,6 +30,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
 
         public abstract string ToHtml();
         public abstract string ToBBCode();
+        public abstract string ToLegacyBBCode();
         public abstract string ToText();
 
         public abstract SyntaxTreeNode SetSubNodes(IEnumerable<SyntaxTreeNode> subNodes);

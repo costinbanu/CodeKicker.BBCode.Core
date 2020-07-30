@@ -64,30 +64,21 @@ namespace CodeKicker.BBCode.Core
             return (rootNode, bitfield);
         }
 
-        //public string GetBitField(string bbCode, string code = "")
-        //{
-        //    if (bbCode == null) throw new ArgumentNullException("bbCode");
-
-        //    Stack<SyntaxTreeNode> stack = new Stack<SyntaxTreeNode>();
-        //    var rootNode = new SequenceNode();
-        //    stack.Push(rootNode);
-        //    return IterateInText(bbCode, stack, code, true).GetBase64();
-        //}
-
         /// <summary>
-        /// Transforms a bbcode text so that it will be readable by at least a phpbb 3.0.x platform
+        /// Transforms a bbcode text so that it will be readable by at least a phpbb 3.0.x platform. Plain text is already HTML encoded.
         /// </summary>
         /// <param name="text">text with bb code</param>
-        /// <param name="uidLength"> bbcode uid length</param>
-        /// <returns><see cref="Tuple{T1, T2}"/> where first item is the transformed text (<see cref="string"/>), and the second is the bbcode uid field (<see cref="string"/>)</returns>
+        /// <param name="uid">BBCode UID</param>
+        /// <param name="uidLength">BBCode UID length</param>
+        /// <returns><see cref="Tuple{T1, T2, T3}"/> where the first item is the transformed text, the second is the bbcode uid field and the third is the bbcode bitfield</returns>
         public (string bbCode, string uid, string bitfield) TransformForBackwardsCompatibility(string text, string uid = "", int uidLength = 8)
         {
             try
             {
                 var actualUid = string.IsNullOrWhiteSpace(uid) ? ToBase36(Math.Abs(Convert.ToInt64($"0x{Guid.NewGuid().ToString("n").Substring(4, 16)}", 16))).Substring(0, uidLength) : uid;
-                var dummyParser = new BBCodeParser(ErrorMode.Strict, null, Tags.Select(x => new BBTag(x.Name, x.OpenTagTemplate, x.CloseTagTemplate, x.AutoRenderContent, x.TagClosingStyle, x.ContentTransformer, x.EnableIterationElementBehavior, x.Id, actualUid, x.Attributes)).ToList());
+                var dummyParser = new BBCodeParser(ErrorMode.TryErrorCorrection, null, Tags.Select(x => new BBTag(x.Name, x.OpenTagTemplate, x.CloseTagTemplate, x.AutoRenderContent, x.TagClosingStyle, x.ContentTransformer, x.EnableIterationElementBehavior, x.Id, actualUid, x.Attributes)).ToList());
                 var (node, bitfield) = dummyParser.ParseSyntaxTreeImpl(text, true, true, uid);
-                return (node.ToBBCode(), actualUid, bitfield.GetBase64());
+                return (node.ToLegacyBBCode(), actualUid, bitfield.GetBase64());
             }
             catch
             {
@@ -196,23 +187,30 @@ namespace CodeKicker.BBCode.Core
 
                         if (openingNode.Tag != tag.Tag && ErrorMode == ErrorMode.Strict && ErrorOrReturn("TagNotMatching", tag.Tag.Name, openingNode.Tag.Name)) return false;
 
-                        while (true)
+                        if (tag.Tag.Name == "*" && openingNode.Tag == tag.Tag) //allow nesting within lists
                         {
-                            var poppedOpeningNode = (TagNode)stack.Pop();
-
-                            if (poppedOpeningNode.Tag != tag.Tag)
+                            stack.Pop();
+                        }
+                        else if(tag.Tag.Name != "*") //this is not a list, so close all tags
+                        {
+                            while (true)
                             {
-                                //a nesting imbalance was detected
+                                var poppedOpeningNode = (TagNode)stack.Pop();
 
-                                if (openingNode.Tag.RequiresClosingTag && ErrorMode == ErrorMode.Strict && ErrorOrReturn("TagNotMatching", tag.Tag.Name, openingNode.Tag.Name))
-                                    return false;
-                                //close the (wrongly) open tag. we have already popped so do nothing.
-                            }
-                            else
-                            {
-                                //the opening node matches the closing node
-                                //close the already open li-item. we have already popped. we have already popped so do nothing.
-                                break;
+                                if (poppedOpeningNode.Tag != tag.Tag)
+                                {
+                                    //a nesting imbalance was detected
+
+                                    if (openingNode.Tag.RequiresClosingTag && ErrorMode == ErrorMode.Strict && ErrorOrReturn("TagNotMatching", tag.Tag.Name, openingNode.Tag.Name))
+                                        return false;
+                                    //close the (wrongly) open tag. we have already popped so do nothing.
+                                }
+                                else
+                                {
+                                    //the opening node matches the closing node
+                                    //close the already open li-item. we have already popped. we have already popped so do nothing.
+                                    break;
+                                }
                             }
                         }
                     }

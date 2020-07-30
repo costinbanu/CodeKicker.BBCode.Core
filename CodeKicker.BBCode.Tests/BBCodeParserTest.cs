@@ -1,6 +1,9 @@
 ﻿using CodeKicker.BBCode.Core.SyntaxTree;
 using RandomTestValues;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Web;
 using Xunit;
 
 namespace CodeKicker.BBCode.Core.Tests
@@ -10,12 +13,40 @@ namespace CodeKicker.BBCode.Core.Tests
         [Theory]
         [InlineData("", "")]
         [InlineData("a", "a")]
+        [InlineData("a\r\nb", "a<br/>b")]
+        [InlineData("[b]a\r\nb[/b]", "<b>a<br/>b</b>")]
+        [InlineData("a\r\n[b]b[/b]", "a<br/><b>b</b>")]
+        [InlineData("\r\n\r\n\r\na", "<br/>a")]
+        [InlineData("a\r\n\r\n\r\n", "a<br/>")]
+        [InlineData("a\r\n\r\n\r\nb", "a<br/><br/><br/>b")]
         [InlineData(" a b c ", " a b c ")]
+        [InlineData("   a b c   ", "   a b c   ")]
         [InlineData("[b][/b]", "<b></b>")]
         [InlineData("text[b]text[/b]text", "text<b>text</b>text")]
-        public void Whitespace_IsCorrect(string input, string expected)
+        [InlineData("\r\n\r\n\r\n[b]text[/b]text\r\n\r\n\r\n", "<br/><b>text</b>text<br/>")]
+        public void Whitespace_WhenCommonTagsIsCorrect(string input, string expected)
         {
             Assert.Equal(expected, BBEncodeForTest(input, ErrorMode.Strict));
+        }
+
+        [Theory]
+        [InlineData("[list][*]aaa\r\n[*]bbb[/list]", "<ul><li>aaa</li><li>bbb</li></ul>")]
+        [InlineData("[list]\r\n[*]aaa\r\n[*]bbb\r\n[/list]", "<ul><li>aaa</li><li>bbb</li></ul>")]
+        [InlineData("[list]\n[*]aaa\n[*]bbb\n[/list]", "<ul><li>aaa</li><li>bbb</li></ul>")]
+        [InlineData("[list]\r\n[*]unu[/*]\r\n[*]doi[/*]\r\n[/list]\r\n\r\n[list]\r\n[*]unu\r\n[list]\r\n[*]a[/*]\r\n[*]b[/*]\r\n[/list][/*]\r\n[*]doi[/*]\r\n[*]trei[/*]\r\n[/list]",
+            "<ul><li>unu</li><li>doi</li></ul><br/><br/><ul><li>unu<br/><ul><li>a</li><li>b</li></ul></li><li>doi</li><li>trei</li></ul>")]
+        [InlineData("[list]\n[*]unu[/*]\n[*]doi[/*]\n[/list]\n\n[list]\n[*]unu\n[list]\n[*]a[/*]\n[*]b[/*]\n[/list][/*]\n[*]doi[/*]\n[*]trei[/*]\n[/list]",
+            "<ul><li>unu</li><li>doi</li></ul><br/><br/><ul><li>unu<br/><ul><li>a</li><li>b</li></ul></li><li>doi</li><li>trei</li></ul>")]
+        public void  Newline_ListItem_IsCorrect(string input, string expected)
+        {
+            var bbcodes = new List<BBTag>
+            {
+                new BBTag("*", "<li>", "</li>", true, BBTagClosingStyle.AutoCloseElement, x => x, true, 20),
+                new BBTag("list", "<${attr}>", "</${attr}>", true, true, 9, "",
+                    new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\""))
+            };
+            var parser = new BBCodeParser(bbcodes);
+            Assert.Equal(expected, parser.ToHtml(input));
         }
 
         [Fact]
@@ -62,8 +93,29 @@ namespace CodeKicker.BBCode.Core.Tests
             Assert.Equal("<li></li><li>item</li>", BBEncodeForTest("[*][*]item", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
             Assert.Equal("<li>1</li><li>2</li>", BBEncodeForTest("[*]1[*]2", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
             Assert.Equal("<li>1<b>a</b></li><li>2</li>", BBEncodeForTest("[*]1[b]a[/b][*]2", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
-            Assert.Equal("<li>1<b>a</b></li><li>2</li>", BBEncodeForTest("[*]1[b]a[*]2", ErrorMode.ErrorFree, BBTagClosingStyle.AutoCloseElement, true));
+            Assert.Equal("<li>1<b>a<li>2</li></b></li>", BBEncodeForTest("[*]1[b]a[*]2", ErrorMode.ErrorFree, BBTagClosingStyle.AutoCloseElement, true));
             Assert.Throws<BBCodeParsingException>(() => BBEncodeForTest("[*]1[b]a[*]2", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
+        }
+
+        [Theory]
+        [InlineData("[list=1][*]one[list][*]bullet1[*]bullet2[/list][*]two[/list]", "<ol type=\"1\"><li>one<ul><li>bullet1</li><li>bullet2</li></ul></li><li>two</li></ol>")]
+        [InlineData("[list][*]one[list][*]bullet1[*]bullet2[/list][*]two[/list]", "<ul><li>one<ul><li>bullet1</li><li>bullet2</li></ul></li><li>two</li></ul>")]
+        [InlineData("[list=1][*]one[*][list][*]bullet1[*]bullet2[/list][*]two[/list]", "<ol type=\"1\"><li>one</li><li><ul><li>bullet1</li><li>bullet2</li></ul></li><li>two</li></ol>")]
+        public void NestedLists_AreCorrect(string bbcode, string html)
+        {
+            var parser = new BBCodeParser(new List<BBTag>
+            {
+                    new BBTag("*", "<li>", "</li>", true, BBTagClosingStyle.AutoCloseElement, null, true, 20),
+                    new BBTag("list", "<${attr}>", "</${attr}>", true, BBTagClosingStyle.RequiresClosingTag, null, 9, "",
+                        new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\""))
+            });
+            Assert.Equal(html, HttpUtility.HtmlDecode(parser.ToHtml(bbcode)));
+        }
+
+        [Fact]
+        public void IgnoreNewlineAfterListItemTag()
+        {
+            Assert.Equal("<ul><li>item1</li><li>item2</li></ul>", BBEncodeForTest("[list]\r\n[*]item1\r\n[*]item2\r\n[/list]", ErrorMode.Strict, BBTagClosingStyle.AutoCloseElement, true));
         }
 
         [Fact]

@@ -26,7 +26,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
         public override string ToHtml()
         {
             var content = GetContent();
-            return ReplaceAttributeValues(Tag.OpenTagTemplate, content) + (Tag.AutoRenderContent ? content : null) + ReplaceAttributeValues(Tag.CloseTagTemplate, content);
+            return ReplaceAttributeValues(Tag.OpenTagTemplate, content, false) + (Tag.AutoRenderContent ? content : null) + ReplaceAttributeValues(Tag.CloseTagTemplate, content, true);
         }
         public override string ToBBCode()
         {
@@ -44,7 +44,32 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
                 if (attrKvp.Key.Name == "") continue;
                 attrs += " " + attrKvp.Key.Name + "=" + attrKvp.Value;
             }
+            return "[" + Tag.Name + attrs + "]" + content + "[/" + Tag.Name + "]";
+        }
+        public override string ToLegacyBBCode()
+        {
+            var content = string.Concat(SubNodes.Select(s => s.ToLegacyBBCode()).ToArray());
+
+            var attrs = "";
+            var defAttr = Tag.FindAttribute("");
+            var attachFlag = "";
+            if (defAttr != null && AttributeValues.ContainsKey(defAttr))
+            {
+                attrs += "=" + AttributeValues[defAttr];
+            }
+            foreach (var attrKvp in AttributeValues)
+            {
+                if (Tag.Name.Equals("attachment", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(attachFlag) && attrKvp.Key.ID.Equals("num", StringComparison.OrdinalIgnoreCase) && int.TryParse(attrKvp.Value, out var id))
+                {
+                    attachFlag = $"<!-- ia{id} -->";
+                }
+
+                if (attrKvp.Key.Name == "") continue;
+                attrs += " " + attrKvp.Key.Name + "=" + attrKvp.Value;
+            }
+
             var toReturn = new StringBuilder("[").Append(Tag.Name).Append(attrs);
+            
             if (!string.IsNullOrWhiteSpace(Tag.BBCodeUid))
             {
                 toReturn.Append(":").Append(Tag.BBCodeUid);
@@ -62,7 +87,8 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
                 trailingWhitespace = content.Substring(pos + 1);
             }
 
-            toReturn.Append("]").Append(nonEmptyContent).Append("[/").Append(Tag.Name);
+            toReturn.Append("]").Append(attachFlag).Append(nonEmptyContent.Replace("\r", "")).Append(attachFlag).Append("[/").Append(Tag.Name);
+
             if(!string.IsNullOrWhiteSpace(Tag.BBCodeUid))
             {
                 toReturn.Append(":");
@@ -94,7 +120,8 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             var content = string.Concat(SubNodes.Select(s => s.ToHtml()).ToArray());
             return Tag.ContentTransformer == null ? content : Tag.ContentTransformer(content);
         }
-        string ReplaceAttributeValues(string template, string content)
+
+        string ReplaceAttributeValues(string template, string content, bool isClosingTag)
         {
             var attributesWithValues = (from attr in Tag.Attributes
                                         group attr by attr.ID into gAttrByID
@@ -118,7 +145,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
                     //replace attributes with values
                     var rawValue = x.attrAndVal.val;
                     var attribute = x.attrAndVal.attr;
-                    output = ReplaceAttribute(output, attribute, rawValue, placeholderStr, attrValuesByID);
+                    output = ReplaceAttribute(output, attribute, rawValue, placeholderStr, attrValuesByID, isClosingTag);
                 }
             }
 
@@ -129,14 +156,14 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             foreach (var attr in emptyAttributes)
             {
                 var placeholderStr = "${" + attr.ID + "}";
-                output = ReplaceAttribute(output, attr, null, placeholderStr, attrValuesByID);
+                output = ReplaceAttribute(output, attr, null, placeholderStr, attrValuesByID, isClosingTag);
             }
 
             output = output.Replace("${" + BBTag.ContentPlaceholderName + "}", content);
             return output;
         }
 
-        static string ReplaceAttribute(string output, BBAttribute attribute, string rawValue, string placeholderStr, Dictionary<string, string> attrValuesByID)
+        static string ReplaceAttribute(string output, BBAttribute attribute, string rawValue, string placeholderStr, Dictionary<string, string> attrValuesByID, bool isClosingTag)
         {
             string effectiveValue;
             if (attribute.ContentTransformer == null)
@@ -155,7 +182,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
                 attribute.HtmlEncodingMode == HtmlEncodingMode.HtmlAttributeEncode ? HttpUtility.HtmlAttributeEncode(effectiveValue)
                     : attribute.HtmlEncodingMode == HtmlEncodingMode.HtmlEncode ? HttpUtility.HtmlEncode(effectiveValue)
                           : effectiveValue;
-            output = output.Replace(placeholderStr, encodedValue);
+            output = output.Replace(placeholderStr, isClosingTag ? encodedValue.Split(' ')[0] : encodedValue);
             return output;
         }
 

@@ -24,12 +24,13 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
 
         public override string ToHtml()
         {
-            return (HtmlTemplate == null ? HttpUtility.HtmlEncode(Text) : HtmlTemplate.Replace("${content}", HttpUtility.HtmlEncode(Text))).Replace(Environment.NewLine, "<br />");
+            return (HtmlTemplate == null ? HttpUtility.HtmlEncode(Text) : HtmlTemplate.Replace("${content}", HttpUtility.HtmlEncode(Text))).Replace("\r", "");
         }
         public override string ToBBCode()
         {
             return Text.Replace("\\", "\\\\").Replace("[", "\\[").Replace("]", "\\]");
         }
+        public override string ToLegacyBBCode() => HttpUtility.HtmlEncode(ToBBCode().Replace("\r", ""));
         public override string ToText()
         {
             return Text;
