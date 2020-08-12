@@ -68,7 +68,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
                 attrs += " " + attrKvp.Key.Name + "=" + attrKvp.Value;
             }
 
-            var toReturn = new StringBuilder("[").Append(Tag.Name).Append(attrs);
+            var toReturn = new StringBuilder("[").Append(Tag.Name).Append(HttpUtility.HtmlEncode(attrs));
             
             if (!string.IsNullOrWhiteSpace(Tag.BBCodeUid))
             {

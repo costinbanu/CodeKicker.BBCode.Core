@@ -33,11 +33,11 @@ namespace CodeKicker.BBCode.Core.Tests
         [InlineData("[list][*]aaa\r\n[*]bbb[/list]", "<ul><li>aaa</li><li>bbb</li></ul>")]
         [InlineData("[list]\r\n[*]aaa\r\n[*]bbb\r\n[/list]", "<ul><li>aaa</li><li>bbb</li></ul>")]
         [InlineData("[list]\n[*]aaa\n[*]bbb\n[/list]", "<ul><li>aaa</li><li>bbb</li></ul>")]
-        [InlineData("[list]\r\n[*]unu[/*]\r\n[*]doi[/*]\r\n[/list]\r\n\r\n[list]\r\n[*]unu\r\n[list]\r\n[*]a[/*]\r\n[*]b[/*]\r\n[/list][/*]\r\n[*]doi[/*]\r\n[*]trei[/*]\r\n[/list]",
-            "<ul><li>unu</li><li>doi</li></ul><br/><br/><ul><li>unu<br/><ul><li>a</li><li>b</li></ul></li><li>doi</li><li>trei</li></ul>")]
-        [InlineData("[list]\n[*]unu[/*]\n[*]doi[/*]\n[/list]\n\n[list]\n[*]unu\n[list]\n[*]a[/*]\n[*]b[/*]\n[/list][/*]\n[*]doi[/*]\n[*]trei[/*]\n[/list]",
-            "<ul><li>unu</li><li>doi</li></ul><br/><br/><ul><li>unu<br/><ul><li>a</li><li>b</li></ul></li><li>doi</li><li>trei</li></ul>")]
-        public void  Newline_ListItem_IsCorrect(string input, string expected)
+        [InlineData("[list]\r\n[*]one[/*]\r\n[*]two[/*]\r\n[/list]\r\n\r\n[list]\r\n[*]one\r\n[list]\r\n[*]a[/*]\r\n[*]b[/*]\r\n[/list][/*]\r\n[*]two[/*]\r\n[*]three[/*]\r\n[/list]",
+            "<ul><li>one</li><li>two</li></ul><br/><br/><ul><li>one<br/><ul><li>a</li><li>b</li></ul></li><li>two</li><li>three</li></ul>")]
+        [InlineData("[list]\n[*]one[/*]\n[*]two[/*]\n[/list]\n\n[list]\n[*]one\n[list]\n[*]a[/*]\n[*]b[/*]\n[/list][/*]\n[*]two[/*]\n[*]three[/*]\n[/list]",
+            "<ul><li>one</li><li>two</li></ul><br/><br/><ul><li>one<br/><ul><li>a</li><li>b</li></ul></li><li>two</li><li>three</li></ul>")]
+        public void Newline_ListItem_IsCorrect(string input, string expected)
         {
             var bbcodes = new List<BBTag>
             {
@@ -123,7 +123,7 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             var parser = new BBCodeParser(new[]
                 {
-                    new BBTag("b", "<b>", "</b>", true, true, content => content.Trim(), 1), 
+                    new BBTag("b", "<b>", "</b>", true, true, content => content.Trim(), 1),
                 });
 
             Assert.Equal("<b>abc</b>", parser.ToHtml("[b] abc [/b]"));
@@ -269,7 +269,7 @@ namespace CodeKicker.BBCode.Core.Tests
                 }
             }
         }
-        
+
         public static string BBEncodeForTest(string bbCode, ErrorMode errorMode)
         {
             return BBEncodeForTest(bbCode, errorMode, BBTagClosingStyle.AutoCloseElement, false);
@@ -278,7 +278,7 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             return BBCodeTestUtil.GetParserForTest(errorMode, true, listItemBbTagClosingStyle, enableIterationElementBehavior).ToHtml(bbCode).Replace("\r", "").Replace("\n", "<br/>");
         }
-        
+
         [Fact]
         public void ToTextDoesNotCrash()
         {
@@ -287,7 +287,7 @@ namespace CodeKicker.BBCode.Core.Tests
             var text = parser.ParseSyntaxTree(input).ToText();
             Assert.True(text.Length <= input.Length);
         }
-        
+
         [Fact]
         public void StrictErrorMode()
         {
@@ -329,15 +329,15 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             var parserNull = new BBCodeParser(ErrorMode.Strict, null, new[]
                 {
-                    new BBTag("b", "<b>", "</b>", 1), 
+                    new BBTag("b", "<b>", "</b>", 1),
                 });
             var parserEmpty = new BBCodeParser(ErrorMode.Strict, "", new[]
                 {
-                    new BBTag("b", "<b>", "</b>", 1), 
+                    new BBTag("b", "<b>", "</b>", 1),
                 });
             var parserDiv = new BBCodeParser(ErrorMode.Strict, "<div>${content}</div>", new[]
                 {
-                    new BBTag("b", "<b>", "</b>", 1), 
+                    new BBTag("b", "<b>", "</b>", 1),
                 });
 
             Assert.Equal(@"", parserNull.ToHtml(@""));
@@ -398,7 +398,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [Fact]
         public void SuppressFirstNewlineAfter_StopsFirstNewlineAfterClosingTag()
         {
-            var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>", 1){ SuppressFirstNewlineAfter = true } });
+            var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>", 1) { SuppressFirstNewlineAfter = true } });
 
             var input = "[code]Here is some code[/code]\nMore text!";
             var expected = "<pre>Here is some code</pre>More text!"; // No newline after the closing PRE
