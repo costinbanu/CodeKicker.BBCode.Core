@@ -129,14 +129,21 @@ namespace CodeKicker.BBCode.Core
 
         bool MatchTagEnd(string bbCode, string code, ref int pos, Stack<SyntaxTreeNode> stack, bool preserveWhitespace, Bitfield bitfield = null)
         {
+            var openingNode = stack.Peek() as TagNode; //could also be a SequenceNode
             int end = pos;
-
             var tagEnd = ParseTagEnd(bbCode, code, ref end, preserveWhitespace);
+
+            if (!(tagEnd?.Equals("code", StringComparison.InvariantCultureIgnoreCase) ?? false) && (openingNode?.Tag?.Name?.Equals("code", StringComparison.InvariantCultureIgnoreCase) ?? false))
+            {
+                //we are inside a [code] tag that contains BBCode. The inner code is supposed to be displayed 'as is', and thus we do not parse it
+                return false;
+            }
+
             if (tagEnd != null)
             {
                 while (true)
                 {
-                    var openingNode = stack.Peek() as TagNode; //could also be a SequenceNode
+                    openingNode = stack.Peek() as TagNode;
                     if (bitfield != null && openingNode?.Tag?.Id != null)
                     {
                         bitfield.Set(openingNode.Tag.Id);
@@ -168,6 +175,12 @@ namespace CodeKicker.BBCode.Core
         }
         bool MatchStartTag(string bbCode, string code, ref int pos, Stack<SyntaxTreeNode> stack, bool preserveWhitespace)
         {
+            if (stack.OfType<TagNode>().Any(n => n.Tag.Name.Equals("code", StringComparison.InvariantCultureIgnoreCase)))
+            {
+                //we are inside a [code] tag that contains BBCode. The inner code is supposed to be displayed 'as is', and thus we do not parse it
+                return false;
+            }
+
             int end = pos;
             var tag = ParseTagStart(bbCode, code, ref end, preserveWhitespace);
             if (tag != null)

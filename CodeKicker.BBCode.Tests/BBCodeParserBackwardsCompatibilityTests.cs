@@ -209,7 +209,7 @@ $@"[list=1:{uid}]
         {
             var parser = BBCodeTestUtil.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility("[url=\"https://google.com\"]\r\n[b]a link[/b]\r\n[/url]");
-            Assert.Equal($"[url=\"https://google.com\":{uid}]\n[b:{uid}]a link[/b:{uid}]\n[/url:{uid}]", bbCode);
+            Assert.Equal($"[url=&quot;https://google.com&quot;:{uid}]\n[b:{uid}]a link[/b:{uid}]\n[/url:{uid}]", bbCode);
             Assert.NotNull(uid);
             Assert.NotEmpty(uid);
         }
@@ -221,7 +221,7 @@ $@"[list=1:{uid}]
         [InlineData("<b>a</b>\r\n[b]b[/b]\r\n[list]\r\n[*]1\r\n[list]\r\n[*]11\r\n[*]12\r\n[/list]\r\n[*]2\r\n[/list]\r\nx\r\n[attachment=0]y.jpg[/attachment]\r\nz",
             "&lt;b&gt;a&lt;/b&gt;\n[b:dhrttn34]b[/b:dhrttn34]\n[list:dhrttn34]\n[*:dhrttn34]1\n[list:dhrttn34]\n[*:dhrttn34]11[/*:m:dhrttn34]\n[*:dhrttn34]12[/*:m:dhrttn34]\n[/list:u:dhrttn34][/*:m:dhrttn34]\n[*:dhrttn34]2[/*:m:dhrttn34]\n[/list:u:dhrttn34]\nx\n[attachment=0:dhrttn34]<!-- ia0 -->y.jpg<!-- ia0 -->[/attachment:dhrttn34]\nz", 
             "dhrttn34")]
-        [InlineData("[quote=\"user\"]", "[quote=&quot;user&quot;:7465hfgt]", "7465hfgt")]
+        [InlineData("[quote=\"user\"]aaa[/quote]", "[quote=&quot;user&quot;:7465hfgt]aaa[/quote:7465hfgt]", "7465hfgt")]
         public void BackwardsCompatibility_EscapeHtml_IsCorrect(string input, string expected, string uid)
         {
             var parser = BBCodeTestUtil.GetCustomParser();

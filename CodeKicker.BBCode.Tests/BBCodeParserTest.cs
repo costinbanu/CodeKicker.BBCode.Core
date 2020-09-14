@@ -405,5 +405,15 @@ namespace CodeKicker.BBCode.Core.Tests
 
             Assert.Equal(expected, parser.ToHtml(input));
         }
+
+        [Theory]
+        [InlineData("[code][b]bold[/b][/code]", "<pre class=\"prettyprint\">[b]bold[/b]</pre>")]
+        [InlineData("[code][b][i]bold italic[/i][/b][/code]", "<pre class=\"prettyprint\">[b][i]bold italic[/i][/b]</pre>")]
+        [InlineData("[quote=\"someone\"][code][b][i]bold italic[/i][/b][/code][/quote]", "<blockquote class=\"PostQuote\"><b>someone</b> wrote:<br/><pre class=\"prettyprint\">[b][i]bold italic[/i][/b]</pre></blockquote>")]
+        public void BBCodeInsideCodeTag_IsNotParsed(string input, string expected)
+        {
+            var parser = BBCodeTestUtil.GetCustomParser();
+            Assert.Equal(expected, parser.ToHtml(input));
+        }
     }
 }

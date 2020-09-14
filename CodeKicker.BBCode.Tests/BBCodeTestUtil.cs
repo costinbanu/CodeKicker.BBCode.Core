@@ -92,7 +92,7 @@ namespace CodeKicker.BBCode.Core.Tests
                     new BBTag("code", "<pre class=\"prettyprint\">", "</pre>", 8),
                     new BBTag("img", "<br/><img src=\"${content}\" /><br/>", string.Empty, false, false, 4),
                     new BBTag("quote", "<blockquote class=\"PostQuote\">${name}", "</blockquote>", 0, "",
-                        new BBAttribute("name", "", (a) => string.IsNullOrWhiteSpace(a.AttributeValue) ? "" : $"<b>{HttpUtility.HtmlDecode(a.AttributeValue).Trim('"')}</b> wrote:<br/>")) { GreedyAttributeProcessing = true },
+                        new BBAttribute("name", "", (a) => string.IsNullOrWhiteSpace(a.AttributeValue) ? "" : $"<b>{HttpUtility.HtmlDecode(a.AttributeValue).Trim('"')}</b> wrote:<br/>", HtmlEncodingMode.UnsafeDontEncode)) { GreedyAttributeProcessing = true },
                     new BBTag("*", "<li>", "</li>", true, BBTagClosingStyle.AutoCloseElement, null, true, 13),
                     new BBTag("list", "<${attr}>", "</${attr}>", true, true, 9, "",
                         new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\"")),
