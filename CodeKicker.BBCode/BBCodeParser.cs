@@ -43,7 +43,7 @@ namespace CodeKicker.BBCode.Core
         public virtual SequenceNode ParseSyntaxTree(string bbCode, string code = "")
             => ParseSyntaxTreeImpl(bbCode, false, false, code).node;
 
-        private (SequenceNode node, Bitfield bitfield) ParseSyntaxTreeImpl(string bbCode, bool setBitfield, bool preserveWhitespace, string code = "")
+        private (SequenceNode node, Bitfield bitfield) ParseSyntaxTreeImpl(string bbCode, bool setBitfield, bool preserveWhitespace, string code = "", bool transformUrls = true)
         {
             if (bbCode == null) throw new ArgumentNullException("bbCode");
 
@@ -51,7 +51,7 @@ namespace CodeKicker.BBCode.Core
             var rootNode = new SequenceNode();
             stack.Push(rootNode);
 
-            var bitfield = IterateInText(bbCode, stack, preserveWhitespace, code, setBitfield);
+            var bitfield = IterateInText(bbCode, stack, preserveWhitespace, code, setBitfield, transformUrls);
 
             while (stack.Count > 1) //close all tags that are still open and can be closed implicitly
             {
@@ -81,7 +81,7 @@ namespace CodeKicker.BBCode.Core
             {
                 var actualUid = string.IsNullOrWhiteSpace(uid) ? ToBase36(Math.Abs(Convert.ToInt64($"0x{Guid.NewGuid().ToString("n").Substring(4, 16)}", 16))).Substring(0, uidLength) : uid;
                 var dummyParser = new BBCodeParser(ErrorMode.TryErrorCorrection, null, Tags.Select(x => new BBTag(x.Name, x.OpenTagTemplate, x.CloseTagTemplate, x.AutoRenderContent, x.TagClosingStyle, x.ContentTransformer, x.EnableIterationElementBehavior, x.Id, actualUid, x.AllowUrlProcessingAsText, x.Attributes)).ToList());
-                var (node, bitfield) = dummyParser.ParseSyntaxTreeImpl(text, true, true, uid);
+                var (node, bitfield) = dummyParser.ParseSyntaxTreeImpl(text, true, true, uid, false);
                 return (node.ToLegacyBBCode(), actualUid, bitfield.GetBase64());
             }
             catch
@@ -90,7 +90,7 @@ namespace CodeKicker.BBCode.Core
             }
         }
 
-        Bitfield IterateInText(string bbCode, Stack<SyntaxTreeNode> stack, bool preserveWhitespace, string code = "", bool setBitfield = false)
+        Bitfield IterateInText(string bbCode, Stack<SyntaxTreeNode> stack, bool preserveWhitespace, string code, bool setBitfield, bool transformUrls)
         {
             var end = 0;
             var bitfield = setBitfield ? new Bitfield() : null;
@@ -102,7 +102,7 @@ namespace CodeKicker.BBCode.Core
                 if (MatchStartTag(bbCode, code, ref end, stack, preserveWhitespace))
                     continue;
 
-                if (MatchTextNode(bbCode, ref end, stack))
+                if (MatchTextNode(bbCode, ref end, stack, transformUrls))
                     continue;
 
                 if (ErrorMode != ErrorMode.ErrorFree)
@@ -242,11 +242,11 @@ namespace CodeKicker.BBCode.Core
 
             return false;
         }
-        bool MatchTextNode(string bbCode, ref int pos, Stack<SyntaxTreeNode> stack)
+        bool MatchTextNode(string bbCode, ref int pos, Stack<SyntaxTreeNode> stack, bool transformUrls)
         {
             int end = pos;
 
-            var textNode = ParseText(bbCode, ref end, stack);
+            var textNode = ParseText(bbCode, ref end, stack, transformUrls);
             if (textNode != null)
             {
                 AppendText(textNode, stack);
@@ -349,7 +349,7 @@ namespace CodeKicker.BBCode.Core
             pos = end;
             return tagName;
         }
-        string ParseText(string input, ref int pos, Stack<SyntaxTreeNode> stack)
+        string ParseText(string input, ref int pos, Stack<SyntaxTreeNode> stack, bool transformUrls)
         {
             int end = pos;
             bool escapeFound = false;
@@ -358,6 +358,8 @@ namespace CodeKicker.BBCode.Core
             var urlCandidateStartString = new[] { "https", "http", "www" };
             var lastOpenTag = stack.Peek() as TagNode;
             var foundUrlIndexes = new List<(int startPos, int endPos)>(input.Length / 7 + 1);
+            var insideHtmlTag = false;
+            var openedHtmlTag = false;
             while (end < input.Length)
             {
                 if (input[end] == '[' && !escapeFound) break;
@@ -382,8 +384,28 @@ namespace CodeKicker.BBCode.Core
                     escapeFound = false;
                 }
 
+                if (input[end] == '<' && !insideHtmlTag)
+                {
+                    insideHtmlTag = true;
+                }
+
+                if (input[end] == '>' && !openedHtmlTag)
+                {
+                    openedHtmlTag = true;
+                }
+
+                if (input[end] == '>' && insideHtmlTag)
+                {
+                    insideHtmlTag = false;
+                }
+
+                if (input[end] == '<' && openedHtmlTag)
+                {
+                    openedHtmlTag = false;
+                }
+
                 var urlStart = urlCandidateStartString.FirstOrDefault(s => end - s.Length + 1 >= 0 && input[(end - s.Length + 1)..(end + 1)].Equals(s, StringComparison.OrdinalIgnoreCase));
-                if (!urlCandidateStartPos.HasValue && !string.IsNullOrWhiteSpace(urlStart) 
+                if (transformUrls && !insideHtmlTag && !openedHtmlTag && !urlCandidateStartPos.HasValue && !string.IsNullOrWhiteSpace(urlStart) 
                     && (end - urlStart.Length == -1 || !_urlAllowedCharsRegex.IsMatch(input[end - urlStart.Length].ToString())) 
                     && !Tags.Any(t => !t.AllowUrlProcessingAsText && t.Name.Equals(lastOpenTag?.Tag?.Name ?? "", StringComparison.OrdinalIgnoreCase)))
                 {

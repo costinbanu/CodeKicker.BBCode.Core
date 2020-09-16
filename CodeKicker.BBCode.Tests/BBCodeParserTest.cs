@@ -430,6 +430,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [InlineData("https://www.google.com/?q=!@#$%&*-_=+|;:,./?'a", "<!-- m --><a href=\"https://www.google.com/?q=!@#$%&*-_=+|;:,./?\" target=\"_blank\">https://www.google.com/?q=!@#$%&*-_=+|;:,./?</a><!-- m -->'a")]
         [InlineData("bla www.google.com bla www.google.com", "bla <!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --> bla <!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m -->")]
         [InlineData("[b]www.google.com[/b]", "<b><!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --></b>")]
+        [InlineData("www.google.com\n\n[b]something[/b]", "<!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --><br/><br/><b>something</b>")]
         [InlineData("[b]1[/b] www.google.com [b]2[/b]", "<b>1</b> <!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --> <b>2</b>")]
         [InlineData("[b]1[/b]www.google.com[b]2[/b]", "<b>1</b><!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --><b>2</b>")]
         [InlineData("[b]some text[/b] [i]some more [attachment=0]file.jpg[/attachment] content [u]italic underline[/u][/i] www.google.com [b]some more text[/b]",
@@ -440,6 +441,9 @@ namespace CodeKicker.BBCode.Core.Tests
         [InlineData("bla[url]www.google.com[/url]bla", "bla<a href=\"www.google.com\" target=\"_blank\">www.google.com</a>bla")]
         [InlineData("[url=www.google.com]google[/url]", "<a href=\"www.google.com\" target=\"_blank\">google</a>")]
         [InlineData("[img]https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png[/img]", "<br/><img src=\"https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png\" /><br/>")]
+        [InlineData("<!-- m --><a href=\"https://www.google.com/?q=something+longer+to+search+for\" target=\"_blank\">https://www.google.com/?q=something+long ... arch+for</a><!-- m -->", "<!-- m --><a href=\"https://www.google.com/?q=something+longer+to+search+for\" target=\"_blank\">https://www.google.com/?q=something+long ... arch+for</a><!-- m -->")]
+        [InlineData("<!-- s:) --><img src=\"www.some.url/icon_e_smile.gif\" alt=\":)\" title=\"Smile\" /><!-- s:) -->", "<!-- s:) --><img src=\"www.some.url/icon_e_smile.gif\" alt=\":)\" title=\"Smile\" /><!-- s:) -->")]
+        [InlineData("<img src=\"www.some.url/i/dont/know/how/to/use/bbcode.jpg\" />", "<img src=\"www.some.url/i/dont/know/how/to/use/bbcode.jpg\" />")]
         public void CreateUrlsFromText_IsCorrect(string input, string expected)
         {
             var parser = BBCodeTestUtil.GetCustomParser();
