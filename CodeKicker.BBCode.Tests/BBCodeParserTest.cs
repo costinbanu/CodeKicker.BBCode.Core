@@ -429,6 +429,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [InlineData("https://www.google.com/?q=!@#$%&*-_=+|;:,./?", "<!-- m --><a href=\"https://www.google.com/?q=!@#$%&*-_=+|;:,./?\" target=\"_blank\">https://www.google.com/?q=!@#$%&*-_=+|;:,./?</a><!-- m -->")]
         [InlineData("https://www.google.com/?q=!@#$%&*-_=+|;:,./?'a", "<!-- m --><a href=\"https://www.google.com/?q=!@#$%&*-_=+|;:,./?\" target=\"_blank\">https://www.google.com/?q=!@#$%&*-_=+|;:,./?</a><!-- m -->'a")]
         [InlineData("bla www.google.com bla www.google.com", "bla <!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --> bla <!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m -->")]
+        [InlineData("[b]www.google.com[/b]", "<b><!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --></b>")]
         [InlineData("[b]1[/b] www.google.com [b]2[/b]", "<b>1</b> <!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --> <b>2</b>")]
         [InlineData("[b]1[/b]www.google.com[b]2[/b]", "<b>1</b><!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --><b>2</b>")]
         [InlineData("[b]some text[/b] [i]some more [attachment=0]file.jpg[/attachment] content [u]italic underline[/u][/i] www.google.com [b]some more text[/b]",
