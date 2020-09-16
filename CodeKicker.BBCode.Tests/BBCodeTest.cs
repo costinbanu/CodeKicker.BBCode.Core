@@ -188,6 +188,15 @@ namespace CodeKicker.BBCode.Core.Tests
             Assert.Equal(expectedHtml, HttpUtility.HtmlDecode(BBCodeTestUtil.GetCustomParser().ToHtml(text, uid)));
         }
 
+        [Theory]
+        [InlineData(@"one\two\three", @"one\two\three")]
+        [InlineData(@"one\\two\\three", @"one\two\three")]
+        [InlineData(@"one\[two\]three", @"one[two]three")]
+        public void EscapingChars_IsCorrect(string input, string expected)
+        {
+            Assert.Equal(expected, HttpUtility.HtmlDecode(BBCodeTestUtil.GetCustomParser().ToHtml(input)));
+        }
+
 
         class TextAssertVisitor : SyntaxTreeVisitor
         {

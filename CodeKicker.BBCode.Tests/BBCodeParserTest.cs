@@ -42,7 +42,7 @@ namespace CodeKicker.BBCode.Core.Tests
             var bbcodes = new List<BBTag>
             {
                 new BBTag("*", "<li>", "</li>", true, BBTagClosingStyle.AutoCloseElement, x => x, true, 20),
-                new BBTag("list", "<${attr}>", "</${attr}>", true, true, 9, "",
+                new BBTag("list", "<${attr}>", "</${attr}>", true, true, 9, "", true,
                     new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\""))
             };
             var parser = new BBCodeParser(bbcodes);
@@ -106,7 +106,7 @@ namespace CodeKicker.BBCode.Core.Tests
             var parser = new BBCodeParser(new List<BBTag>
             {
                     new BBTag("*", "<li>", "</li>", true, BBTagClosingStyle.AutoCloseElement, null, true, 20),
-                    new BBTag("list", "<${attr}>", "</${attr}>", true, BBTagClosingStyle.RequiresClosingTag, null, 9, "",
+                    new BBTag("list", "<${attr}>", "</${attr}>", true, BBTagClosingStyle.RequiresClosingTag, null, 9, "", true,
                         new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\""))
             });
             Assert.Equal(html, HttpUtility.HtmlDecode(parser.ToHtml(bbcode)));
@@ -134,7 +134,7 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             var parser = new BBCodeParser(ErrorMode.Strict, null, new[]
                 {
-                    new BBTag("font", "<span style=\"${color}${font}\">", "</span>", true, true, 1, "",
+                    new BBTag("font", "<span style=\"${color}${font}\">", "</span>", true, true, 1, "", true,
                         new BBAttribute("color", "color", attributeRenderingContext => string.IsNullOrEmpty(attributeRenderingContext.AttributeValue) ? "" : "color:" + attributeRenderingContext.AttributeValue + ";"),
                         new BBAttribute("font", "font", attributeRenderingContext => string.IsNullOrEmpty(attributeRenderingContext.AttributeValue) ? "" : "font-family:" + attributeRenderingContext.AttributeValue + ";")),
                 });
@@ -376,7 +376,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [Fact]
         public void GreedyAttributeProcessing_ConsumesAllTokensForAttributeValue()
         {
-            var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("quote", "<div><span>Posted by ${name}</span>", "</div>", 1, "", new BBAttribute("name", "")) { GreedyAttributeProcessing = true } });
+            var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("quote", "<div><span>Posted by ${name}</span>", "</div>", 1, "", true, new BBAttribute("name", "")) { GreedyAttributeProcessing = true } });
 
             var input = "[quote=Test User With Spaces]Here is my comment[/quote]";
             var expected = "<div><span>Posted by Test User With Spaces</span>Here is my comment</div>";
@@ -414,6 +414,35 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             var parser = BBCodeTestUtil.GetCustomParser();
             Assert.Equal(expected, parser.ToHtml(input));
+        }
+
+        [Theory]
+        [InlineData("www.google.com", "<!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m -->")]
+        [InlineData("https://www.google.com/?q=something+to+search+for", "<!-- m --><a href=\"https://www.google.com/?q=something+to+search+for\" target=\"_blank\">https://www.google.com/?q=something+to+search+for</a><!-- m -->")]
+        [InlineData("https://www.google.com/?q=something+longer+to+search+for", "<!-- m --><a href=\"https://www.google.com/?q=something+longer+to+search+for\" target=\"_blank\">https://www.google.com/?q=something+long ... arch+for</a><!-- m -->")]
+        [InlineData("https://www.google.com/?q=ăîâșțåøæ", "<!-- m --><a href=\"https://www.google.com/?q=ăîâșțåøæ\" target=\"_blank\">https://www.google.com/?q=ăîâșțåøæ</a><!-- m -->")]
+        [InlineData("https://www.google.com/maps/@59.8470853,10.810886,3a,75y,322.37h,90t/data=!3m7!1e1!3m5!1s-o5DL1mP1veq58zI0sm37w!2e0!6s%2F%2Fgeo1.ggpht.com%2Fcbk%3Fpanoid%3D-o5DL1mP1veq58zI0sm37w%26output%3Dthumbnail%26cb_client%3Dmaps_sv.tactile.gps%26thumb%3D2%26w%3D203%26h%3D100%26yaw%3D338.83408%26pitch%3D0%26thumbfov%3D100!7i16384!8i8192",
+            "<!-- m --><a href=\"https://www.google.com/maps/@59.8470853,10.810886,3a,75y,322.37h,90t/data=!3m7!1e1!3m5!1s-o5DL1mP1veq58zI0sm37w!2e0!6s%2F%2Fgeo1.ggpht.com%2Fcbk%3Fpanoid%3D-o5DL1mP1veq58zI0sm37w%26output%3Dthumbnail%26cb_client%3Dmaps_sv.tactile.gps%26thumb%3D2%26w%3D203%26h%3D100%26yaw%3D338.83408%26pitch%3D0%26thumbfov%3D100!7i16384!8i8192\" target=\"_blank\">" +
+                "https://www.google.com/maps/@59.8470853, ... 4!8i8192</a><!-- m -->")]
+        [InlineData("bla www.google.com bla", "bla <!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --> bla")]
+        [InlineData("bla(www.google.com)bla", "bla(<!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m -->)bla")]
+        [InlineData("https://www.google.com/?q=!@#$%&*-_=+|;:,./?", "<!-- m --><a href=\"https://www.google.com/?q=!@#$%&*-_=+|;:,./?\" target=\"_blank\">https://www.google.com/?q=!@#$%&*-_=+|;:,./?</a><!-- m -->")]
+        [InlineData("https://www.google.com/?q=!@#$%&*-_=+|;:,./?'a", "<!-- m --><a href=\"https://www.google.com/?q=!@#$%&*-_=+|;:,./?\" target=\"_blank\">https://www.google.com/?q=!@#$%&*-_=+|;:,./?</a><!-- m -->'a")]
+        [InlineData("bla www.google.com bla www.google.com", "bla <!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --> bla <!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m -->")]
+        [InlineData("[b]1[/b] www.google.com [b]2[/b]", "<b>1</b> <!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --> <b>2</b>")]
+        [InlineData("[b]1[/b]www.google.com[b]2[/b]", "<b>1</b><!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --><b>2</b>")]
+        [InlineData("[b]some text[/b] [i]some more [attachment=0]file.jpg[/attachment] content [u]italic underline[/u][/i] www.google.com [b]some more text[/b]",
+            "<b>some text</b> <i>some more #{AttachmentFileName=file.jpg/AttachmentIndex=0}# content <u>italic underline</u></i> <!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --> <b>some more text</b>")]
+        [InlineData("[b]some text[/b] [i]some more [attachment=0]file.jpg[/attachment] content [u]italic underline[/u]www.google.com[/i] www.google.com [b]some more text[/b]",
+            "<b>some text</b> <i>some more #{AttachmentFileName=file.jpg/AttachmentIndex=0}# content <u>italic underline</u><!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --></i> <!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m --> <b>some more text</b>")]
+        [InlineData("[url]www.google.com[/url]", "<a href=\"www.google.com\" target=\"_blank\">www.google.com</a>")]
+        [InlineData("bla[url]www.google.com[/url]bla", "bla<a href=\"www.google.com\" target=\"_blank\">www.google.com</a>bla")]
+        [InlineData("[url=www.google.com]google[/url]", "<a href=\"www.google.com\" target=\"_blank\">google</a>")]
+        [InlineData("[img]https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png[/img]", "<br/><img src=\"https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png\" /><br/>")]
+        public void CreateUrlsFromText_IsCorrect(string input, string expected)
+        {
+            var parser = BBCodeTestUtil.GetCustomParser();
+            Assert.Equal(expected, HttpUtility.HtmlDecode(parser.ToHtml(input)));
         }
     }
 }

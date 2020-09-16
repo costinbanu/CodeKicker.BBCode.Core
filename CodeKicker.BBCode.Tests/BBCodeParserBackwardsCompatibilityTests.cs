@@ -238,7 +238,7 @@ $@"[list=1:{uid}]
             var parser = new BBCodeParser(new List<BBTag>
             {
                     new BBTag("*", "<li>", "</li>", true, BBTagClosingStyle.AutoCloseElement, null, true, 20),
-                    new BBTag("list", "<${attr}>", "</${attr}>", true, BBTagClosingStyle.RequiresClosingTag, null, 9, "",
+                    new BBTag("list", "<${attr}>", "</${attr}>", true, BBTagClosingStyle.RequiresClosingTag, null, 9, "", true,
                         new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\""))
             });
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility(bbcode);

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace CodeKicker.BBCode.Core
 {
@@ -23,12 +24,15 @@ namespace CodeKicker.BBCode.Core
             TextNodeHtmlTemplate = textNodeHtmlTemplate;
             Tags = tags ?? throw new ArgumentNullException("tags");
             Bitfield = new Bitfield();
+            _urlAllowedCharsRegex = new Regex(@"[a-z0-9\u00a1-\uffff_\-\.\,\/\&\#\%\!\@\$\?\;\:\+\=\*\|]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
         }
 
         public IList<BBTag> Tags { get; private set; }
         public string TextNodeHtmlTemplate { get; private set; }
         public ErrorMode ErrorMode { get; private set; }
         public Bitfield Bitfield { get; private set; }
+
+        private readonly Regex _urlAllowedCharsRegex;
 
         public virtual string ToHtml(string bbCode, string code = "")
         {
@@ -76,7 +80,7 @@ namespace CodeKicker.BBCode.Core
             try
             {
                 var actualUid = string.IsNullOrWhiteSpace(uid) ? ToBase36(Math.Abs(Convert.ToInt64($"0x{Guid.NewGuid().ToString("n").Substring(4, 16)}", 16))).Substring(0, uidLength) : uid;
-                var dummyParser = new BBCodeParser(ErrorMode.TryErrorCorrection, null, Tags.Select(x => new BBTag(x.Name, x.OpenTagTemplate, x.CloseTagTemplate, x.AutoRenderContent, x.TagClosingStyle, x.ContentTransformer, x.EnableIterationElementBehavior, x.Id, actualUid, x.Attributes)).ToList());
+                var dummyParser = new BBCodeParser(ErrorMode.TryErrorCorrection, null, Tags.Select(x => new BBTag(x.Name, x.OpenTagTemplate, x.CloseTagTemplate, x.AutoRenderContent, x.TagClosingStyle, x.ContentTransformer, x.EnableIterationElementBehavior, x.Id, actualUid, x.AllowUrlProcessingAsText, x.Attributes)).ToList());
                 var (node, bitfield) = dummyParser.ParseSyntaxTreeImpl(text, true, true, uid);
                 return (node.ToLegacyBBCode(), actualUid, bitfield.GetBase64());
             }
@@ -242,7 +246,7 @@ namespace CodeKicker.BBCode.Core
         {
             int end = pos;
 
-            var textNode = ParseText(bbCode, ref end);
+            var textNode = ParseText(bbCode, ref end, stack);
             if (textNode != null)
             {
                 AppendText(textNode, stack);
@@ -345,11 +349,15 @@ namespace CodeKicker.BBCode.Core
             pos = end;
             return tagName;
         }
-        string ParseText(string input, ref int pos)
+        string ParseText(string input, ref int pos, Stack<SyntaxTreeNode> stack)
         {
             int end = pos;
             bool escapeFound = false;
             bool anyEscapeFound = false;
+            int? urlCandidateStartPos = null;
+            var urlCandidateStartString = new[] { "https", "http", "www" };
+            var lastOpenTag = stack.Peek() as TagNode;
+            var foundUrlIndexes = new List<(int startPos, int endPos)>(input.Length / 7 + 1);
             while (end < input.Length)
             {
                 if (input[end] == '[' && !escapeFound) break;
@@ -374,7 +382,24 @@ namespace CodeKicker.BBCode.Core
                     escapeFound = false;
                 }
 
+                var urlStart = urlCandidateStartString.FirstOrDefault(s => end - s.Length + 1 >= 0 && input[(end - s.Length + 1)..(end + 1)].Equals(s, StringComparison.OrdinalIgnoreCase));
+                if (!urlCandidateStartPos.HasValue && !string.IsNullOrWhiteSpace(urlStart) 
+                    && (end - urlStart.Length == -1 || !_urlAllowedCharsRegex.IsMatch(input[end - urlStart.Length].ToString())) 
+                    && !Tags.Any(t => !t.AllowUrlProcessingAsText && t.Name.Equals(lastOpenTag?.Tag?.Name ?? "", StringComparison.OrdinalIgnoreCase)))
+                {
+                    urlCandidateStartPos = end - urlStart.Length + 1;
+                }
+                else if (urlCandidateStartPos.HasValue && !_urlAllowedCharsRegex.IsMatch(input[end].ToString()))
+                {
+                    foundUrlIndexes.Add((urlCandidateStartPos.Value - pos, end - pos));
+                    urlCandidateStartPos = null;
+                }
                 end++;
+            }
+
+            if (urlCandidateStartPos.HasValue)
+            {
+                foundUrlIndexes.Add((urlCandidateStartPos.Value - pos, end - pos));
             }
 
             if (escapeFound)
@@ -384,6 +409,28 @@ namespace CodeKicker.BBCode.Core
             }
 
             var result = input[pos..end];
+            var resultCopy = result;
+
+            try
+            {
+                var offset = 0;
+                foreach (var (startPos, endPos) in foundUrlIndexes)
+                {
+                    var value = result[startPos..endPos];
+                    var linkText = value;
+                    if (linkText.Length > 53)
+                    {
+                        linkText = $"{linkText[0..40]} ... {linkText[^8..^0]}";
+                    }
+                    var (replaceResult, curOffset) = TextHelper.ReplaceAtIndex(result, value, $"<!-- m --><a href=\"{value}\" target=\"_blank\">{linkText}</a><!-- m -->", startPos + offset);
+                    result = replaceResult;
+                    offset += curOffset;
+                }
+            }
+            catch
+            {
+                result = resultCopy;
+            }
 
             if (anyEscapeFound)
             {

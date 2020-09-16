@@ -32,11 +32,11 @@ namespace CodeKicker.BBCode.Core
                     new BBTag("i", "<span style=\"font-style:italic;\">", "</span>", 2), 
                     new BBTag("u", "<span style=\"text-decoration:underline;\">", "</span>", 7), 
                     new BBTag("code", "<pre class=\"prettyprint\">", "</pre>", 8), 
-                    new BBTag("img", "<img src=\"${content}\" />", "", false, true, 4), 
+                    new BBTag("img", "<img src=\"${content}\" />", "", false, true, 4, allowUrlProcessingAsText: false), 
                     new BBTag("quote", "<blockquote>", "</blockquote>", 0), 
                     new BBTag("list", "<ul>", "</ul>", 9), 
                     new BBTag("*", "<li>", "</li>", true, false, 13), 
-                    new BBTag("url", "<a href=\"${href}\">", "</a>", 3, "", new BBAttribute("href", ""), new BBAttribute("href", "href")), 
+                    new BBTag("url", "<a href=\"${href}\">", "</a>", 3, "", false, new BBAttribute("href", ""), new BBAttribute("href", "href")), 
                 });
         }
 
