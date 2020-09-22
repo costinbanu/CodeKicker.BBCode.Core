@@ -84,20 +84,34 @@ namespace CodeKicker.BBCode.Core.Tests
 
         public static BBCodeParser GetCustomParser()
         {
+            string urlTransformer (string url)
+            {
+                if (!url.StartsWith("www", StringComparison.InvariantCultureIgnoreCase) && !url.StartsWith("http", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    //return "";
+                    throw new ArgumentException("Bad URL formatting");
+                }
+                else if (url.StartsWith("www", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    url = $"//{url}";
+                }
+                return url;
+            }
+
             return new BBCodeParser(new[]
             {
                     new BBTag("b", "<b>", "</b>", 1),
                     new BBTag("i", "<i>", "</i>", 2),
                     new BBTag("u", "<u>", "</u>", 7),
                     new BBTag("code", "<pre class=\"prettyprint\">", "</pre>", 8),
-                    new BBTag("img", "<br/><img src=\"${content}\" /><br/>", string.Empty, false, false, 4, allowUrlProcessingAsText: false),
+                    new BBTag("img", "<br/><img src=\"${content}\" /><br/>", "", false, BBTagClosingStyle.RequiresClosingTag, x => urlTransformer(x), false, 4, allowUrlProcessingAsText: false),
                     new BBTag("quote", "<blockquote class=\"PostQuote\">${name}", "</blockquote>", 0, "", true,
                         new BBAttribute("name", "", (a) => string.IsNullOrWhiteSpace(a.AttributeValue) ? "" : $"<b>{HttpUtility.HtmlDecode(a.AttributeValue).Trim('"')}</b> wrote:<br/>", HtmlEncodingMode.UnsafeDontEncode)) { GreedyAttributeProcessing = true },
                     new BBTag("*", "<li>", "</li>", true, BBTagClosingStyle.AutoCloseElement, null, true, 13),
                     new BBTag("list", "<${attr}>", "</${attr}>", true, true, 9, "", true,
                         new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\"")),
                     new BBTag("url", "<a href=\"${href}\" target=\"_blank\">", "</a>", 3, "", false,
-                        new BBAttribute("href", "", a => string.IsNullOrWhiteSpace(a?.AttributeValue) ? "${content}" : a.AttributeValue)),
+                        new BBAttribute("href", "", a => urlTransformer(string.IsNullOrWhiteSpace(a?.AttributeValue) ? a.TagContent : a.AttributeValue))),
                     new BBTag("color", "<span style=\"color:${code}\">", "</span>", 6, "", true,
                         new BBAttribute("code", "")),
                     new BBTag("size", "<span style=\"font-size:${fsize}\">", "</span>", 5, "", true,

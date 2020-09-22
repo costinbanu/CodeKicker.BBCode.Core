@@ -26,7 +26,14 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
         public override string ToHtml()
         {
             var content = GetContent();
-            return ReplaceAttributeValues(Tag.OpenTagTemplate, content, false) + (Tag.AutoRenderContent ? content : null) + ReplaceAttributeValues(Tag.CloseTagTemplate, content, true);
+            try
+            {
+                return ReplaceAttributeValues(Tag.OpenTagTemplate, content, false) + (Tag.AutoRenderContent ? content : null) + ReplaceAttributeValues(Tag.CloseTagTemplate, content, true);
+            }
+            catch
+            {
+                return content;
+            }
         }
         public override string ToBBCode()
         {
@@ -118,7 +125,15 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
         string GetContent()
         {
             var content = string.Concat(SubNodes.Select(s => s.ToHtml()).ToArray());
-            return Tag.ContentTransformer == null ? content : Tag.ContentTransformer(content);
+            try
+            {
+                if (Tag.ContentTransformer != null)
+                {
+                    content = Tag.ContentTransformer(content);
+                }
+            }
+            catch { }
+            return content;
         }
 
         string ReplaceAttributeValues(string template, string content, bool isClosingTag)
@@ -145,7 +160,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
                     //replace attributes with values
                     var rawValue = x.attrAndVal.val;
                     var attribute = x.attrAndVal.attr;
-                    output = ReplaceAttribute(output, attribute, rawValue, placeholderStr, attrValuesByID, isClosingTag);
+                    output = ReplaceAttribute(output, attribute, rawValue, placeholderStr, attrValuesByID, isClosingTag, content);
                 }
             }
 
@@ -156,14 +171,14 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             foreach (var attr in emptyAttributes)
             {
                 var placeholderStr = "${" + attr.ID + "}";
-                output = ReplaceAttribute(output, attr, null, placeholderStr, attrValuesByID, isClosingTag);
+                output = ReplaceAttribute(output, attr, null, placeholderStr, attrValuesByID, isClosingTag, content);
             }
 
             output = output.Replace("${" + BBTag.ContentPlaceholderName + "}", content);
             return output;
         }
 
-        static string ReplaceAttribute(string output, BBAttribute attribute, string rawValue, string placeholderStr, Dictionary<string, string> attrValuesByID, bool isClosingTag)
+        static string ReplaceAttribute(string output, BBAttribute attribute, string rawValue, string placeholderStr, Dictionary<string, string> attrValuesByID, bool isClosingTag, string tagContent)
         {
             string effectiveValue;
             if (attribute.ContentTransformer == null)
@@ -172,7 +187,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             }
             else
             {
-                var ctx = new AttributeRenderingContextImpl(attribute, rawValue, attrValuesByID);
+                var ctx = new AttributeRenderingContextImpl(attribute, rawValue, attrValuesByID, tagContent);
                 effectiveValue = attribute.ContentTransformer(ctx);
             }
 
@@ -217,16 +232,18 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
 
         class AttributeRenderingContextImpl : IAttributeRenderingContext
         {
-            public AttributeRenderingContextImpl(BBAttribute attribute, string attributeValue, IDictionary<string, string> getAttributeValueByIdData)
+            public AttributeRenderingContextImpl(BBAttribute attribute, string attributeValue, IDictionary<string, string> getAttributeValueByIdData, string tagContent)
             {
                 Attribute = attribute;
                 AttributeValue = attributeValue;
                 GetAttributeValueByIDData = getAttributeValueByIdData;
+                TagContent = tagContent;
             }
 
-            public BBAttribute Attribute { get; private set; }
-            public string AttributeValue { get; private set; }
-            public IDictionary<string, string> GetAttributeValueByIDData { get; private set; }
+            public BBAttribute Attribute { get; }
+            public string AttributeValue { get; }
+            public IDictionary<string, string> GetAttributeValueByIDData { get; }
+            public string TagContent { get; }
 
             public string GetAttributeValueByID(string id)
             {

@@ -37,5 +37,6 @@ namespace CodeKicker.BBCode.Core
         BBAttribute Attribute { get; }
         string AttributeValue { get; }
         string GetAttributeValueByID(string id);
+        string TagContent { get; }
     }
 }

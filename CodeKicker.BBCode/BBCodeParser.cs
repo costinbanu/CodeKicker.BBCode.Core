@@ -360,6 +360,7 @@ namespace CodeKicker.BBCode.Core
             var foundUrlIndexes = new List<(int startPos, int endPos)>(input.Length / 7 + 1);
             var insideHtmlTag = false;
             var openedHtmlTag = false;
+
             while (end < input.Length)
             {
                 if (input[end] == '[' && !escapeFound) break;
@@ -389,7 +390,7 @@ namespace CodeKicker.BBCode.Core
                     insideHtmlTag = true;
                 }
 
-                if (input[end] == '>' && !openedHtmlTag)
+                if (input[end] == '>' && insideHtmlTag && !openedHtmlTag && end > 0 && input[end - 1] != '/' && input[end - 1] != '-')
                 {
                     openedHtmlTag = true;
                 }
@@ -399,7 +400,7 @@ namespace CodeKicker.BBCode.Core
                     insideHtmlTag = false;
                 }
 
-                if (input[end] == '<' && openedHtmlTag)
+                if (input[end] == '<' && !insideHtmlTag && openedHtmlTag)
                 {
                     openedHtmlTag = false;
                 }
@@ -438,13 +439,18 @@ namespace CodeKicker.BBCode.Core
                 var offset = 0;
                 foreach (var (startPos, endPos) in foundUrlIndexes)
                 {
-                    var value = result[startPos..endPos];
+                    var value = result[(startPos + offset)..(endPos + offset)];
                     var linkText = value;
+                    var linkAddress = value;
+                    if (!linkAddress.StartsWith("http", StringComparison.InvariantCultureIgnoreCase) && !linkAddress.StartsWith("//", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        linkAddress = $"//{linkAddress}";
+                    }
                     if (linkText.Length > 53)
                     {
                         linkText = $"{linkText[0..40]} ... {linkText[^8..^0]}";
                     }
-                    var (replaceResult, curOffset) = TextHelper.ReplaceAtIndex(result, value, $"<!-- m --><a href=\"{value}\" target=\"_blank\">{linkText}</a><!-- m -->", startPos + offset);
+                    var (replaceResult, curOffset) = TextHelper.ReplaceAtIndex(result, value, $"<!-- m --><a href=\"{linkAddress}\" target=\"_blank\">{linkText}</a><!-- m -->", startPos + offset);
                     result = replaceResult;
                     offset += curOffset;
                 }

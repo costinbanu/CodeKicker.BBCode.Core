@@ -257,7 +257,7 @@ $@"[list=1:{uid}]
         }
 
         [Theory]
-        [InlineData("www.google.com", "<!-- m --><a href=\"www.google.com\" target=\"_blank\">www.google.com</a><!-- m -->")]
+        [InlineData("www.google.com", "<!-- m --><a href=\"//www.google.com\" target=\"_blank\">www.google.com</a><!-- m -->")]
         [InlineData("https://www.google.com/?q=something+longer+to+search+for", "<!-- m --><a href=\"https://www.google.com/?q=something+longer+to+search+for\" target=\"_blank\">https://www.google.com/?q=something+long ... arch+for</a><!-- m -->")]
         [InlineData("https://www.google.com/?q=something+longer+to+search+for\n\n[b]something[/b]", "<!-- m --><a href=\"https://www.google.com/?q=something+longer+to+search+for\" target=\"_blank\">https://www.google.com/?q=something+long ... arch+for</a><!-- m --><br/><br/><b>something</b>")]
         public void TransformedText_IsParsedCorrectly(string input, string expected)
