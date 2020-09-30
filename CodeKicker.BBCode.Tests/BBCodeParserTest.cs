@@ -444,12 +444,16 @@ namespace CodeKicker.BBCode.Core.Tests
         [InlineData("[b]some text[/b] [i]some more [attachment=0]file.jpg[/attachment] content [u]italic underline[/u]www.google.com[/i] www.google.com [b]some more text[/b]",
             "<b>some text</b> <i>some more #{AttachmentFileName=file.jpg/AttachmentIndex=0}# content <u>italic underline</u><!-- m --><a href=\"//www.google.com\" target=\"_blank\">www.google.com</a><!-- m --></i> <!-- m --><a href=\"//www.google.com\" target=\"_blank\">www.google.com</a><!-- m --> <b>some more text</b>")]
         [InlineData("[url]www.google.com[/url]", "<a href=\"//www.google.com\" target=\"_blank\">www.google.com</a>")]
+        [InlineData("[url]https://www.google.com?q=something&p=somethingElse[/url]", "<a href=\"https://www.google.com?q=something&p=somethingElse\" target=\"_blank\">https://www.google.com?q=something&p=somethingElse</a>")]
+        [InlineData("[url=https://www.google.com?q=something&p=somethingElse]link[/url]", "<a href=\"https://www.google.com?q=something&p=somethingElse\" target=\"_blank\">link</a>")]
+        [InlineData("https://www.google.com?q=something&p=somethingElse", "<!-- m --><a href=\"https://www.google.com?q=something&p=somethingElse\" target=\"_blank\">https://www.google.com?q=something&p=somethingElse</a><!-- m -->")]
         [InlineData("bla[url]www.google.com[/url]bla", "bla<a href=\"//www.google.com\" target=\"_blank\">www.google.com</a>bla")]
         [InlineData("[url=www.google.com]google[/url]", "<a href=\"//www.google.com\" target=\"_blank\">google</a>")]
         [InlineData("[img]https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png[/img]", "<br/><img src=\"https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png\" /><br/>")]
         [InlineData("<!-- m --><a href=\"https://www.google.com/?q=something+longer+to+search+for\" target=\"_blank\">https://www.google.com/?q=something+long ... arch+for</a><!-- m -->", "<!-- m --><a href=\"https://www.google.com/?q=something+longer+to+search+for\" target=\"_blank\">https://www.google.com/?q=something+long ... arch+for</a><!-- m -->")]
         [InlineData("<!-- s:) --><img src=\"www.some.url/icon_e_smile.gif\" alt=\":)\" title=\"Smile\" /><!-- s:) -->", "<!-- s:) --><img src=\"www.some.url/icon_e_smile.gif\" alt=\":)\" title=\"Smile\" /><!-- s:) -->")]
         [InlineData("<img src=\"www.some.url/i/dont/know/how/to/use/bbcode.jpg\" />", "<img src=\"www.some.url/i/dont/know/how/to/use/bbcode.jpg\" />")]
+        [InlineData("[code]www.google.com[/code]", "<pre class=\"prettyprint\">www.google.com</pre>")]
         public void CreateUrlsFromText_IsCorrect(string input, string expected)
         {
             var parser = BBCodeTestUtil.GetCustomParser();
