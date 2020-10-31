@@ -12,5 +12,8 @@ This is a fork of the [original modification repository](https://github.com/Pabl
 * added support for phpbb 3.x inline attachment html comments
 * made whitespace management fully compatible with phpbb3 
 
+## Usage
+Install the [NuGet package](https://www.nuget.org/packages/CodeKicker.BBCode.Core/)
+
 ## License
 Both the original project and the modification repo are licensed under the MIT license, thus my changes are released under the same terms.
