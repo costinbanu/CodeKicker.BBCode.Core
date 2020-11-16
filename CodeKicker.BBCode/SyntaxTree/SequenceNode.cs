@@ -8,7 +8,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
     public sealed class SequenceNode : SyntaxTreeNode
     {
 
-        static readonly Regex LISTITEM_NEWLINE_REGEX = new Regex(@"\n?\<\/li\>\n?", RegexOptions.Compiled);
+        static readonly Regex LISTITEM_NEWLINE_REGEX = new Regex(@"\n?\<\/li\>\n?", RegexOptions.Compiled, TimeSpan.FromSeconds(20));
 
         public SequenceNode()
         {

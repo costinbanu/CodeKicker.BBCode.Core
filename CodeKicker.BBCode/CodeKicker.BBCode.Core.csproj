@@ -4,20 +4,22 @@
     <TargetFrameworks>netstandard2.1;netcoreapp3.1</TargetFrameworks>
     <LangVersion>8.0</LangVersion>
     <PackageId>CodeKicker.BBCode.Core</PackageId>
-    <Version>1.4.0</Version>
+    <Version>1.4.1</Version>
     <Authors>Costin Banu</Authors>
     <Description>A .NET Core compatible fork of CodeKicker.BBCode with extra features and backwards compatibility support</Description>
     <PackageProjectUrl>https://github.com/costinbanu/CodeKicker.BBCode.Core</PackageProjectUrl>
     <RepositoryUrl>https://github.com/costinbanu/CodeKicker.BBCode.Core</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageReleaseNotes>Added support for netstandard2.1</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed URL parsing bug</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <AssemblyVersion>1.4.1.0</AssemblyVersion>
+    <FileVersion>1.4.1.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

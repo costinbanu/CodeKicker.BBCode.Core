@@ -24,7 +24,6 @@ namespace CodeKicker.BBCode.Core
             TextNodeHtmlTemplate = textNodeHtmlTemplate;
             Tags = tags ?? throw new ArgumentNullException("tags");
             Bitfield = new Bitfield();
-            _urlAllowedCharsRegex = new Regex(@"[a-z0-9\u00a1-\uffff_\-\.\,\/\&\#\%\!\@\$\?\;\:\+\=\*\|]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
         }
 
         public IList<BBTag> Tags { get; private set; }
@@ -32,7 +31,8 @@ namespace CodeKicker.BBCode.Core
         public ErrorMode ErrorMode { get; private set; }
         public Bitfield Bitfield { get; private set; }
 
-        private readonly Regex _urlAllowedCharsRegex;
+        private static readonly Regex _urlAllowedCharsRegex = new Regex(@"[a-z0-9\u00a1-\uffff_\-\.\,\/\&\#\%\!\@\$\?\;\:\+\=\*\|]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled, TimeSpan.FromSeconds(20));
+        private static readonly string[] _urlCandidateStartString = new[] { "https", "http", "www" };
 
         public virtual string ToHtml(string bbCode, string code = "")
         {
@@ -355,7 +355,6 @@ namespace CodeKicker.BBCode.Core
             bool escapeFound = false;
             bool anyEscapeFound = false;
             int? urlCandidateStartPos = null;
-            var urlCandidateStartString = new[] { "https", "http", "www" };
             var lastOpenTag = stack.Peek() as TagNode;
             var foundUrlIndexes = new List<(int startPos, int endPos)>(input.Length / 7 + 1);
             var insideHtmlTag = false;
@@ -405,7 +404,7 @@ namespace CodeKicker.BBCode.Core
                     openedHtmlTag = false;
                 }
 
-                var urlStart = urlCandidateStartString.FirstOrDefault(s => end - s.Length + 1 >= 0 && input[(end - s.Length + 1)..(end + 1)].Equals(s, StringComparison.OrdinalIgnoreCase));
+                var urlStart = _urlCandidateStartString.FirstOrDefault(s => end - s.Length + 1 >= 0 && input[(end - s.Length + 1)..(end + 1)].Equals(s, StringComparison.OrdinalIgnoreCase));
                 if (transformUrls && !insideHtmlTag && !openedHtmlTag && !urlCandidateStartPos.HasValue && !string.IsNullOrWhiteSpace(urlStart) 
                     && (end - urlStart.Length == -1 || !_urlAllowedCharsRegex.IsMatch(input[end - urlStart.Length].ToString())) 
                     && !Tags.Any(t => !t.AllowUrlProcessingAsText && t.Name.Equals(lastOpenTag?.Tag?.Name ?? "", StringComparison.OrdinalIgnoreCase)))
@@ -445,6 +444,10 @@ namespace CodeKicker.BBCode.Core
                     if (!linkAddress.StartsWith("http", StringComparison.InvariantCultureIgnoreCase) && !linkAddress.StartsWith("//", StringComparison.InvariantCultureIgnoreCase))
                     {
                         linkAddress = $"//{linkAddress}";
+                    }
+                    if (!Uri.TryCreate(linkAddress, UriKind.Absolute, out var dummy) || _urlCandidateStartString.Any(x => dummy.Host.Equals(x, StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        continue;
                     }
                     if (linkText.Length > 53)
                     {

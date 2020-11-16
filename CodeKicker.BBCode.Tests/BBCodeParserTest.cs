@@ -454,6 +454,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [InlineData("<!-- s:) --><img src=\"www.some.url/icon_e_smile.gif\" alt=\":)\" title=\"Smile\" /><!-- s:) -->", "<!-- s:) --><img src=\"www.some.url/icon_e_smile.gif\" alt=\":)\" title=\"Smile\" /><!-- s:) -->")]
         [InlineData("<img src=\"www.some.url/i/dont/know/how/to/use/bbcode.jpg\" />", "<img src=\"www.some.url/i/dont/know/how/to/use/bbcode.jpg\" />")]
         [InlineData("[code]www.google.com[/code]", "<pre class=\"prettyprint\">www.google.com</pre>")]
+        [InlineData("http aaa https aaaa www aaaaa", "http aaa https aaaa www aaaaa")]
         public void CreateUrlsFromText_IsCorrect(string input, string expected)
         {
             var parser = BBCodeTestUtil.GetCustomParser();
