@@ -31,7 +31,9 @@ namespace CodeKicker.BBCode.Core
         public ErrorMode ErrorMode { get; private set; }
         public Bitfield Bitfield { get; private set; }
 
-        private static readonly Regex _urlAllowedCharsRegex = new Regex(@"[a-z0-9\u00a1-\uffff_\-\.\,\/\&\#\%\!\@\$\?\;\:\+\=\*\|]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled, TimeSpan.FromSeconds(20));
+        private static readonly string nonAlphaNumericUrlChars = /*Regex.Escape(*/"_-.,/&#%!@$?;:+=*|"/*).Replace("-", @"\-")*/;
+        //private static readonly Regex _nonAlphaNumericUrlCharsRegex = new Regex(@$"[{nonAlphaNumericUrlChars}]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled, TimeSpan.FromSeconds(20));
+        private static readonly Regex _urlAllowedCharsRegex = new Regex(@$"[a-z0-9\u00a1-\uffff{Regex.Escape(nonAlphaNumericUrlChars).Replace("-", @"\-")}]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled, TimeSpan.FromSeconds(20));
         private static readonly string[] _urlCandidateStartString = new[] { "https", "http", "www" };
 
         public virtual string ToHtml(string bbCode, string code = "")
@@ -438,7 +440,7 @@ namespace CodeKicker.BBCode.Core
                 var offset = 0;
                 foreach (var (startPos, endPos) in foundUrlIndexes)
                 {
-                    var value = result[(startPos + offset)..(endPos + offset)];
+                    var value = result[(startPos + offset)..(endPos + offset)].TrimEnd(nonAlphaNumericUrlChars.ToCharArray());
                     var linkText = value;
                     var linkAddress = value;
                     if (!linkAddress.StartsWith("http", StringComparison.InvariantCultureIgnoreCase) && !linkAddress.StartsWith("//", StringComparison.InvariantCultureIgnoreCase))
