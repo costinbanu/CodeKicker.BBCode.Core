@@ -418,6 +418,7 @@ namespace CodeKicker.BBCode.Core.Tests
 
         [Theory]
         [InlineData("www.google.com", "<!-- m --><a href=\"//www.google.com\" target=\"_blank\">www.google.com</a><!-- m -->")]
+        [InlineData("www.google.com/", "<!-- m --><a href=\"//www.google.com/\" target=\"_blank\">www.google.com/</a><!-- m -->")]
         [InlineData("<img src=\"emoji.jpg\"/>\nwww.google.com", "<img src=\"emoji.jpg\"/><br/><!-- m --><a href=\"//www.google.com\" target=\"_blank\">www.google.com</a><!-- m -->")]
         [InlineData("<!-- :) --><img src=\"emoji.jpg\"/><!-- :) -->\nwww.google.com", "<!-- :) --><img src=\"emoji.jpg\"/><!-- :) --><br/><!-- m --><a href=\"//www.google.com\" target=\"_blank\">www.google.com</a><!-- m -->")]
         [InlineData("www.google.com\nwww.google.com", "<!-- m --><a href=\"//www.google.com\" target=\"_blank\">www.google.com</a><!-- m --><br/><!-- m --><a href=\"//www.google.com\" target=\"_blank\">www.google.com</a><!-- m -->")]
@@ -432,8 +433,8 @@ namespace CodeKicker.BBCode.Core.Tests
                 "https://www.google.com/maps/@59.8470853, ... 4!8i8192</a><!-- m -->")]
         [InlineData("bla www.google.com bla", "bla <!-- m --><a href=\"//www.google.com\" target=\"_blank\">www.google.com</a><!-- m --> bla")]
         [InlineData("bla(www.google.com)bla", "bla(<!-- m --><a href=\"//www.google.com\" target=\"_blank\">www.google.com</a><!-- m -->)bla")]
-        [InlineData("https://www.google.com/?q=!@#$%&*-_=+|;:,./?", "<!-- m --><a href=\"https://www.google.com/?q\" target=\"_blank\">https://www.google.com/?q</a><!-- m -->=!@#$%&*-_=+|;:,./?")]
-        [InlineData("https://www.google.com/?q=!@#$%&*-_=+|;:,./?'a", "<!-- m --><a href=\"https://www.google.com/?q\" target=\"_blank\">https://www.google.com/?q</a><!-- m -->=!@#$%&*-_=+|;:,./?'a")]
+        [InlineData("https://www.google.com/?q=!@#$%&*-_=+|;:,.?", "<!-- m --><a href=\"https://www.google.com/?q\" target=\"_blank\">https://www.google.com/?q</a><!-- m -->=!@#$%&*-_=+|;:,.?")]
+        [InlineData("https://www.google.com/?q=!@#$%&*-_=+|;:,.?'a", "<!-- m --><a href=\"https://www.google.com/?q\" target=\"_blank\">https://www.google.com/?q</a><!-- m -->=!@#$%&*-_=+|;:,.?'a")]
         [InlineData("bla www.google.com bla www.google.com", "bla <!-- m --><a href=\"//www.google.com\" target=\"_blank\">www.google.com</a><!-- m --> bla <!-- m --><a href=\"//www.google.com\" target=\"_blank\">www.google.com</a><!-- m -->")]
         [InlineData("[b]www.google.com[/b]", "<b><!-- m --><a href=\"//www.google.com\" target=\"_blank\">www.google.com</a><!-- m --></b>")]
         [InlineData("www.google.com\n\n[b]something[/b]", "<!-- m --><a href=\"//www.google.com\" target=\"_blank\">www.google.com</a><!-- m --><br/><br/><b>something</b>")]

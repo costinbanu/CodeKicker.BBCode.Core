@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.1;netcoreapp3.1</TargetFrameworks>
     <LangVersion>8.0</LangVersion>
     <PackageId>CodeKicker.BBCode.Core</PackageId>
-    <Version>1.4.2</Version>
+    <Version>1.4.2.1</Version>
     <Authors>Costin Banu</Authors>
     <Description>A .NET Core compatible fork of CodeKicker.BBCode with extra features and backwards compatibility support</Description>
     <PackageProjectUrl>https://github.com/costinbanu/CodeKicker.BBCode.Core</PackageProjectUrl>
@@ -18,8 +18,8 @@
   <PropertyGroup>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <AssemblyVersion>1.4.2.0</AssemblyVersion>
-    <FileVersion>1.4.2.0</FileVersion>
+    <AssemblyVersion>1.4.2.1</AssemblyVersion>
+    <FileVersion>1.4.2.1</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
