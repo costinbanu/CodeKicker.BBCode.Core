@@ -94,7 +94,7 @@ namespace CodeKicker.BBCode.Core.Tests
         static void ReplaceTextSpans_ManualTestCases_TestCase(string bbCode, string expected, Func<string, IList<TextSpanReplaceInfo>> getTextSpansToReplace, Func<TagNode, bool> tagFilter)
         {
             var tree1 = BBCodeTestUtil.GetParserForTest(ErrorMode.Strict, false, BBTagClosingStyle.AutoCloseElement, false).ParseSyntaxTree(bbCode);
-            var tree2 = BBCode.ReplaceTextSpans(tree1, getTextSpansToReplace ?? (txt => new TextSpanReplaceInfo[0]), tagFilter);
+            var tree2 = BBCode.ReplaceTextSpans(tree1, getTextSpansToReplace ?? (txt => Array.Empty<TextSpanReplaceInfo>()), tagFilter);
             Assert.Equal(expected, tree2.ToBBCode());
         }
 
@@ -102,7 +102,7 @@ namespace CodeKicker.BBCode.Core.Tests
         public void ReplaceTextSpans_WhenNoModifications_TreeIsPreserved()
         {
             var tree1 = BBCodeTestUtil.GetAnyTree();
-            var tree2 = BBCode.ReplaceTextSpans(tree1, txt => new TextSpanReplaceInfo[0], null);
+            var tree2 = BBCode.ReplaceTextSpans(tree1, txt => Array.Empty<TextSpanReplaceInfo>(), null);
             Assert.Equal(tree1, tree2);
         }
 
@@ -200,7 +200,7 @@ namespace CodeKicker.BBCode.Core.Tests
 
         class TextAssertVisitor : SyntaxTreeVisitor
         {
-            Action<string> assertFunction;
+            readonly Action<string> assertFunction;
 
             public TextAssertVisitor(Action<string> assertFunction)
             {

@@ -8,16 +8,16 @@ namespace CodeKicker.BBCode.Core
 
         public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, BBTagClosingStyle tagClosingClosingStyle, Func<string, string> contentTransformer, bool enableIterationElementBehavior, int id, string bbcodeUid = "", bool allowUrlProcessingAsText = true, params BBAttribute[] attributes)
         {
-            if (!Enum.IsDefined(typeof(BBTagClosingStyle), tagClosingClosingStyle)) throw new ArgumentException("tagClosingClosingStyle");
+            if (!Enum.IsDefined(typeof(BBTagClosingStyle), tagClosingClosingStyle)) throw new ArgumentException(null, nameof(tagClosingClosingStyle));
 
-            Name = name ?? throw new ArgumentNullException("name");
-            OpenTagTemplate = openTagTemplate ?? throw new ArgumentNullException("openTagTemplate");
-            CloseTagTemplate = closeTagTemplate ?? throw new ArgumentNullException("closeTagTemplate");
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            OpenTagTemplate = openTagTemplate ?? throw new ArgumentNullException(nameof(openTagTemplate));
+            CloseTagTemplate = closeTagTemplate ?? throw new ArgumentNullException(nameof(closeTagTemplate));
             AutoRenderContent = autoRenderContent;
             TagClosingStyle = tagClosingClosingStyle;
             ContentTransformer = contentTransformer;
             EnableIterationElementBehavior = enableIterationElementBehavior;
-            Attributes = attributes ?? new BBAttribute[0];
+            Attributes = attributes ?? Array.Empty<BBAttribute>();
             Id = id;
             BBCodeUid = bbcodeUid;
             AllowUrlProcessingAsText = allowUrlProcessingAsText;

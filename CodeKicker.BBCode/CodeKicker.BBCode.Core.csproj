@@ -1,25 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;netcoreapp3.1</TargetFrameworks>
-    <LangVersion>8.0</LangVersion>
+    <TargetFramework>net5.0</TargetFramework>
     <PackageId>CodeKicker.BBCode.Core</PackageId>
-    <Version>1.4.2.1</Version>
+    <Version>2.0.0</Version>
     <Authors>Costin Banu</Authors>
     <Description>A .NET Core compatible fork of CodeKicker.BBCode with extra features and backwards compatibility support</Description>
     <PackageProjectUrl>https://github.com/costinbanu/CodeKicker.BBCode.Core</PackageProjectUrl>
     <RepositoryUrl>https://github.com/costinbanu/CodeKicker.BBCode.Core</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageReleaseNotes>More URL parsing fixing</PackageReleaseNotes>
+    <PackageReleaseNotes>Added net5 support</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <AssemblyVersion>1.4.2.1</AssemblyVersion>
-    <FileVersion>1.4.2.1</FileVersion>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.1</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

@@ -16,7 +16,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
         public TagNode(BBTag tag, IEnumerable<SyntaxTreeNode> subNodes)
             : base(subNodes)
         {
-            Tag = tag ?? throw new ArgumentNullException("tag");
+            Tag = tag ?? throw new ArgumentNullException(nameof(tag));
             AttributeValues = new Dictionary<BBAttribute, string>();
         }
 
@@ -79,7 +79,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             
             if (!string.IsNullOrWhiteSpace(Tag.BBCodeUid))
             {
-                toReturn.Append(":").Append(Tag.BBCodeUid);
+                toReturn.Append(':').Append(Tag.BBCodeUid);
             }
 
             string nonEmptyContent = content, trailingWhitespace = "";
@@ -91,14 +91,14 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
                     pos--;
                 }
                 nonEmptyContent = content[0..(pos + 1)];
-                trailingWhitespace = content.Substring(pos + 1);
+                trailingWhitespace = content[(pos + 1)..];
             }
 
-            toReturn.Append("]").Append(attachFlag).Append(nonEmptyContent.Replace("\r", "")).Append(attachFlag).Append("[/").Append(Tag.Name);
+            toReturn.Append(']').Append(attachFlag).Append(nonEmptyContent.Replace("\r", "")).Append(attachFlag).Append("[/").Append(Tag.Name);
 
             if(!string.IsNullOrWhiteSpace(Tag.BBCodeUid))
             {
-                toReturn.Append(":");
+                toReturn.Append(':');
                 switch (true)
                 {
                     case bool _ when Tag.Name.Equals("*", StringComparison.OrdinalIgnoreCase): 
@@ -114,7 +114,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
                 }
                 toReturn.Append(Tag.BBCodeUid);
             }
-            toReturn.Append("]").Append(trailingWhitespace);
+            toReturn.Append(']').Append(trailingWhitespace);
             return toReturn.ToString();
         }
         public override string ToText()
@@ -209,7 +209,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
 
         public override SyntaxTreeNode SetSubNodes(IEnumerable<SyntaxTreeNode> subNodes)
         {
-            if (subNodes == null) throw new ArgumentNullException("subNodes");
+            if (subNodes == null) throw new ArgumentNullException(nameof(subNodes));
             return new TagNode(Tag, subNodes)
                 {
                     AttributeValues = new Dictionary<BBAttribute, string>(AttributeValues),
@@ -217,7 +217,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
         }
         internal override SyntaxTreeNode AcceptVisitor(SyntaxTreeVisitor visitor)
         {
-            if (visitor == null) throw new ArgumentNullException("visitor");
+            if (visitor == null) throw new ArgumentNullException(nameof(visitor));
             return visitor.Visit(this);
         }
 

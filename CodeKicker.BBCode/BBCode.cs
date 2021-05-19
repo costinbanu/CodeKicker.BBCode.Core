@@ -20,7 +20,7 @@ namespace CodeKicker.BBCode.Core
         /// <returns></returns>
         public static string ToHtml(string bbCode, string code = "")
         {
-            if (bbCode == null) throw new ArgumentNullException("bbCode");
+            if (bbCode == null) throw new ArgumentNullException(nameof(bbCode));
             return defaultParser.ToHtml(bbCode, code);
         }
 
@@ -49,7 +49,7 @@ namespace CodeKicker.BBCode.Core
         /// </summary>
         public static string EscapeText(string text)
         {
-            if (text == null) throw new ArgumentNullException("text");
+            if (text == null) throw new ArgumentNullException(nameof(text));
 
             int escapeCount = 0;
             for (int i = 0; i < text.Length; i++)
@@ -79,15 +79,15 @@ namespace CodeKicker.BBCode.Core
         /// </summary>
         public static string UnescapeText(string text)
         {
-            if (text == null) throw new ArgumentNullException("text");
+            if (text == null) throw new ArgumentNullException(nameof(text));
 
             return text.Replace("\\[", "[").Replace("\\]", "]").Replace("\\\\", "\\");
         }
 
         public static SyntaxTreeNode ReplaceTextSpans(SyntaxTreeNode node, Func<string, IList<TextSpanReplaceInfo>> getTextSpansToReplace, Func<TagNode, bool> tagFilter)
         {
-            if (node == null) throw new ArgumentNullException("node");
-            if (getTextSpansToReplace == null) throw new ArgumentNullException("getTextSpansToReplace");
+            if (node == null) throw new ArgumentNullException(nameof(node));
+            if (getTextSpansToReplace == null) throw new ArgumentNullException(nameof(getTextSpansToReplace));
 
             if (node is TextNode)
             {
@@ -115,7 +115,7 @@ namespace CodeKicker.BBCode.Core
                 }
 
                 if (lastPos != text.Length)
-                    replacementNodes.Add(new TextNode(text.Substring(lastPos)));
+                    replacementNodes.Add(new TextNode(text[lastPos..]));
 
                 return new SequenceNode(replacementNodes);
             }
@@ -138,8 +138,8 @@ namespace CodeKicker.BBCode.Core
 
         public static void VisitTextNodes(SyntaxTreeNode node, Action<string> visitText, Func<TagNode, bool> tagFilter)
         {
-            if (node == null) throw new ArgumentNullException("node");
-            if (visitText == null) throw new ArgumentNullException("visitText");
+            if (node == null) throw new ArgumentNullException(nameof(node));
+            if (visitText == null) throw new ArgumentNullException(nameof(visitText));
 
             if (node is TextNode)
             {
@@ -157,7 +157,7 @@ namespace CodeKicker.BBCode.Core
         class ReferenceEqualityComparer<T> : IEqualityComparer<T>
             where T : class
         {
-            public static readonly ReferenceEqualityComparer<T> Instance = new ReferenceEqualityComparer<T>();
+            public static readonly ReferenceEqualityComparer<T> Instance = new();
 
             public bool Equals(T x, T y)
             {
@@ -175,8 +175,8 @@ namespace CodeKicker.BBCode.Core
     {
         public TextSpanReplaceInfo(int index, int length, SyntaxTreeNode replacement)
         {
-            if (index < 0) throw new ArgumentOutOfRangeException("index");
-            if (length < 0) throw new ArgumentOutOfRangeException("index");
+            if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
+            if (length < 0) throw new ArgumentOutOfRangeException(nameof(index));
 
             Index = index;
             Length = length;

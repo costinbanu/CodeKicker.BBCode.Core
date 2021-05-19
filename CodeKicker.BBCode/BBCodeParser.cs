@@ -19,10 +19,10 @@ namespace CodeKicker.BBCode.Core
 
         public BBCodeParser(ErrorMode errorMode, string textNodeHtmlTemplate, IList<BBTag> tags)
         {
-            if (!Enum.IsDefined(typeof(ErrorMode), errorMode)) throw new ArgumentOutOfRangeException("errorMode");
+            if (!Enum.IsDefined(typeof(ErrorMode), errorMode)) throw new ArgumentOutOfRangeException(nameof(errorMode));
             ErrorMode = errorMode;
             TextNodeHtmlTemplate = textNodeHtmlTemplate;
-            Tags = tags ?? throw new ArgumentNullException("tags");
+            Tags = tags ?? throw new ArgumentNullException(nameof(tags));
             Bitfield = new Bitfield();
         }
 
@@ -33,12 +33,12 @@ namespace CodeKicker.BBCode.Core
 
         private static readonly string nonAlphaNumericUrlCharsNoForwardSlash = "_-.,&#%!@$?;:+=*|";
         private static readonly string nonAlphaNumericUrlChars = $"{nonAlphaNumericUrlCharsNoForwardSlash}/";
-        private static readonly Regex _urlAllowedCharsRegex = new Regex(@$"[a-z0-9\u00a1-\uffff{Regex.Escape(nonAlphaNumericUrlChars).Replace("-", @"\-")}]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled, TimeSpan.FromSeconds(20));
+        private static readonly Regex _urlAllowedCharsRegex = new(@$"[a-z0-9\u00a1-\uffff{Regex.Escape(nonAlphaNumericUrlChars).Replace("-", @"\-")}]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled, TimeSpan.FromSeconds(20));
         private static readonly string[] _urlCandidateStartString = new[] { "https", "http", "www" };
 
         public virtual string ToHtml(string bbCode, string code = "")
         {
-            if (bbCode == null) throw new ArgumentNullException("bbCode");
+            if (bbCode == null) throw new ArgumentNullException(nameof(bbCode));
             return ParseSyntaxTree(bbCode, code).ToHtml();
         }
 
@@ -47,9 +47,9 @@ namespace CodeKicker.BBCode.Core
 
         private (SequenceNode node, Bitfield bitfield) ParseSyntaxTreeImpl(string bbCode, bool setBitfield, bool preserveWhitespace, string code = "", bool transformUrls = true)
         {
-            if (bbCode == null) throw new ArgumentNullException("bbCode");
+            if (bbCode == null) throw new ArgumentNullException(nameof(bbCode));
 
-            Stack<SyntaxTreeNode> stack = new Stack<SyntaxTreeNode>();
+            Stack<SyntaxTreeNode> stack = new();
             var rootNode = new SequenceNode();
             stack.Push(rootNode);
 

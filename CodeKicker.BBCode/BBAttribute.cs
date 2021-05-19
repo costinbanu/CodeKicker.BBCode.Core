@@ -14,10 +14,10 @@ namespace CodeKicker.BBCode.Core
         }
         public BBAttribute(string id, string name, Func<IAttributeRenderingContext, string> contentTransformer, HtmlEncodingMode htmlEncodingMode)
         {
-            if (!Enum.IsDefined(typeof(HtmlEncodingMode), htmlEncodingMode)) throw new ArgumentException("htmlEncodingMode");
+            if (!Enum.IsDefined(typeof(HtmlEncodingMode), htmlEncodingMode)) throw new ArgumentException(null, nameof(htmlEncodingMode));
 
-            ID = id ?? throw new ArgumentNullException("id");
-            Name = name ?? throw new ArgumentNullException("name");
+            ID = id ?? throw new ArgumentNullException(nameof(id));
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             ContentTransformer = contentTransformer;
             HtmlEncodingMode = htmlEncodingMode;
         }

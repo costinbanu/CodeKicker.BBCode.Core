@@ -190,8 +190,8 @@ namespace CodeKicker.BBCode.Core.Tests
         public void NoHtmlChars_AnyInput()
         {
             var output = BBCodeTestUtil.SimpleBBEncodeForTest(RandomValue.String(), RandomValue.Object<ErrorMode>());
-            Assert.True(output.IndexOf('<') == -1);
-            Assert.True(output.IndexOf('>') == -1);
+            Assert.DoesNotContain('<', output);
+            Assert.DoesNotContain('>', output);
         }
 
         [Fact]
