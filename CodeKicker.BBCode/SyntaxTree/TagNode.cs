@@ -9,11 +9,11 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
 {
     public sealed class TagNode : SyntaxTreeNode
     {
-        public TagNode(BBTag tag)
+        public TagNode(BBTag? tag)
             : this(tag, null)
         {
         }
-        public TagNode(BBTag tag, IEnumerable<SyntaxTreeNode> subNodes)
+        public TagNode(BBTag? tag, IEnumerable<SyntaxTreeNode>? subNodes)
             : base(subNodes)
         {
             Tag = tag ?? throw new ArgumentNullException(nameof(tag));
@@ -41,7 +41,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
 
             var attrs = "";
             var defAttr = Tag.FindAttribute("");
-            if (defAttr != null)
+            if (defAttr is not null)
             {
                 if (AttributeValues.ContainsKey(defAttr))
                     attrs += "=" + AttributeValues[defAttr];
@@ -60,7 +60,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             var attrs = "";
             var defAttr = Tag.FindAttribute("");
             var attachFlag = "";
-            if (defAttr != null && AttributeValues.ContainsKey(defAttr))
+            if (defAttr is not null && AttributeValues.ContainsKey(defAttr))
             {
                 attrs += "=" + AttributeValues[defAttr];
             }
@@ -127,7 +127,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             var content = string.Concat(SubNodes.Select(s => s.ToHtml()).ToArray());
             try
             {
-                if (Tag.ContentTransformer != null)
+                if (Tag.ContentTransformer is not null)
                 {
                     content = Tag.ContentTransformer(content);
                 }
@@ -142,11 +142,11 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
                                         group attr by attr.ID into gAttrByID
                                         let val = (from attr in gAttrByID
                                                    let val = TryGetValue(attr)
-                                                   where val != null
+                                                   where val is not null
                                                    select new { attr, val }).FirstOrDefault()
                                         select new { attrID = gAttrByID.Key, attrAndVal = val }).ToList();
 
-            var attrValuesByID = attributesWithValues.Where(x => x.attrAndVal != null).ToDictionary(x => x.attrID, x => x.attrAndVal.val);
+            var attrValuesByID = attributesWithValues.Where(x => x.attrAndVal is not null).ToDictionary(x => x.attrID, x => x.attrAndVal.val);
             if (!attrValuesByID.ContainsKey(BBTag.ContentPlaceholderName))
                 attrValuesByID.Add(BBTag.ContentPlaceholderName, content);
 
@@ -155,7 +155,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             {
                 var placeholderStr = "${" + x.attrID + "}";
 
-                if (x.attrAndVal != null)
+                if (x.attrAndVal is not null)
                 {
                     //replace attributes with values
                     var rawValue = x.attrAndVal.val;
@@ -165,7 +165,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             }
 
             //replace empty attributes
-            var attributeIDsWithValues = new HashSet<string>(attributesWithValues.Where(x => x.attrAndVal != null).Select(x => x.attrID));
+            var attributeIDsWithValues = new HashSet<string>(attributesWithValues.Where(x => x.attrAndVal is not null).Select(x => x.attrID));
             var emptyAttributes = Tag.Attributes.Where(attr => !attributeIDsWithValues.Contains(attr.ID)).ToList();
             
             foreach (var attr in emptyAttributes)
@@ -178,10 +178,10 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             return output;
         }
 
-        static string ReplaceAttribute(string output, BBAttribute attribute, string rawValue, string placeholderStr, Dictionary<string, string> attrValuesByID, bool isClosingTag, string tagContent)
+        static string ReplaceAttribute(string output, BBAttribute attribute, string? rawValue, string placeholderStr, Dictionary<string, string> attrValuesByID, bool isClosingTag, string tagContent)
         {
-            string effectiveValue;
-            if (attribute.ContentTransformer == null)
+            string? effectiveValue;
+            if (attribute.ContentTransformer is null)
             {
                 effectiveValue = rawValue;
             }
@@ -191,7 +191,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
                 effectiveValue = attribute.ContentTransformer(ctx);
             }
 
-            if (effectiveValue == null) effectiveValue = "";
+            if (effectiveValue is null) effectiveValue = "";
 
             var encodedValue =
                 attribute.HtmlEncodingMode == HtmlEncodingMode.HtmlAttributeEncode ? HttpUtility.HtmlAttributeEncode(effectiveValue)
@@ -201,23 +201,23 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             return output;
         }
 
-        string TryGetValue(BBAttribute attr)
+        string? TryGetValue(BBAttribute attr)
         {
-            AttributeValues.TryGetValue(attr, out string val);
+            AttributeValues.TryGetValue(attr, out string? val);
             return val;
         }
 
         public override SyntaxTreeNode SetSubNodes(IEnumerable<SyntaxTreeNode> subNodes)
         {
-            if (subNodes == null) throw new ArgumentNullException(nameof(subNodes));
+            if (subNodes is null) throw new ArgumentNullException(nameof(subNodes));
             return new TagNode(Tag, subNodes)
                 {
                     AttributeValues = new Dictionary<BBAttribute, string>(AttributeValues),
                 };
         }
-        internal override SyntaxTreeNode AcceptVisitor(SyntaxTreeVisitor visitor)
+        internal override SyntaxTreeNode? AcceptVisitor(SyntaxTreeVisitor visitor)
         {
-            if (visitor == null) throw new ArgumentNullException(nameof(visitor));
+            if (visitor is null) throw new ArgumentNullException(nameof(visitor));
             return visitor.Visit(this);
         }
 
@@ -232,7 +232,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
 
         class AttributeRenderingContextImpl : IAttributeRenderingContext
         {
-            public AttributeRenderingContextImpl(BBAttribute attribute, string attributeValue, IDictionary<string, string> getAttributeValueByIdData, string tagContent)
+            public AttributeRenderingContextImpl(BBAttribute attribute, string? attributeValue, IDictionary<string, string> getAttributeValueByIdData, string tagContent)
             {
                 Attribute = attribute;
                 AttributeValue = attributeValue;
@@ -241,13 +241,13 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             }
 
             public BBAttribute Attribute { get; }
-            public string AttributeValue { get; }
+            public string? AttributeValue { get; }
             public IDictionary<string, string> GetAttributeValueByIDData { get; }
             public string TagContent { get; }
 
-            public string GetAttributeValueByID(string id)
+            public string? GetAttributeValueByID(string id)
             {
-                if (!GetAttributeValueByIDData.TryGetValue(id, out string value)) return null;
+                if (!GetAttributeValueByIDData.TryGetValue(id, out string? value)) return null;
                 return value;
             }
         }

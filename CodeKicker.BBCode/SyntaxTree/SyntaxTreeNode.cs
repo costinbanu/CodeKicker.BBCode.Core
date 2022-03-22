@@ -11,13 +11,13 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
         {
             SubNodes = new SyntaxTreeNodeCollection();
         }
-        protected SyntaxTreeNode(ISyntaxTreeNodeCollection subNodes)
+        protected SyntaxTreeNode(ISyntaxTreeNodeCollection? subNodes)
         {
             SubNodes = subNodes ?? new SyntaxTreeNodeCollection();
         }
-        protected SyntaxTreeNode(IEnumerable<SyntaxTreeNode> subNodes)
+        protected SyntaxTreeNode(IEnumerable<SyntaxTreeNode>? subNodes)
         {
-            SubNodes = subNodes == null ? new SyntaxTreeNodeCollection() : new SyntaxTreeNodeCollection(subNodes);
+            SubNodes = subNodes is null ? new SyntaxTreeNodeCollection() : new SyntaxTreeNodeCollection(subNodes);
         }
 
         public override string ToString()
@@ -33,16 +33,16 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
         public abstract string ToLegacyBBCode();
         public abstract string ToText();
 
-        public abstract SyntaxTreeNode SetSubNodes(IEnumerable<SyntaxTreeNode> subNodes);
-        internal abstract SyntaxTreeNode AcceptVisitor(SyntaxTreeVisitor visitor);
+        public abstract SyntaxTreeNode? SetSubNodes(IEnumerable<SyntaxTreeNode> subNodes);
+        internal abstract SyntaxTreeNode? AcceptVisitor(SyntaxTreeVisitor visitor);
         protected abstract bool EqualsCore(SyntaxTreeNode b);
 
         //equality members
-        public bool Equals(SyntaxTreeNode other)
+        public bool Equals(SyntaxTreeNode? other)
         {
             return this == other;
         }
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return Equals(obj as SyntaxTreeNode);
         }
@@ -51,7 +51,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             return base.GetHashCode(); //TODO
         }
 
-        public static bool operator ==(SyntaxTreeNode a, SyntaxTreeNode b)
+        public static bool operator ==(SyntaxTreeNode? a, SyntaxTreeNode? b)
         {
             if (ReferenceEquals(a, b)) return true;
             if (ReferenceEquals(a, null)) return false;
@@ -67,7 +67,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
 
             return a.EqualsCore(b);
         }
-        public static bool operator !=(SyntaxTreeNode a, SyntaxTreeNode b)
+        public static bool operator !=(SyntaxTreeNode? a, SyntaxTreeNode? b)
         {
             return !(a == b);
         }

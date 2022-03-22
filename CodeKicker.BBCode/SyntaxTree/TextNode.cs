@@ -8,11 +8,11 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
 {
     public sealed class TextNode : SyntaxTreeNode
     {
-        public TextNode(string text)
+        public TextNode(string? text)
             : this(text, null)
         {
         }
-        public TextNode(string text, string htmlTemplate)
+        public TextNode(string? text, string? htmlTemplate)
             : base(null)
         {
             Text = text ?? throw new ArgumentNullException(nameof(text));
@@ -20,11 +20,11 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
         }
 
         public string Text { get; private set; }
-        public string HtmlTemplate { get; private set; }
+        public string? HtmlTemplate { get; private set; }
 
         public override string ToHtml()
         {
-            return (HtmlTemplate == null ? HttpUtility.HtmlEncode(Text) : HtmlTemplate.Replace("${content}", HttpUtility.HtmlEncode(Text))).Replace("\r", "");
+            return (HtmlTemplate is null ? HttpUtility.HtmlEncode(Text) : HtmlTemplate.Replace("${content}", HttpUtility.HtmlEncode(Text))).Replace("\r", "");
         }
         public override string ToBBCode()
         {
@@ -38,13 +38,13 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
 
         public override SyntaxTreeNode SetSubNodes(IEnumerable<SyntaxTreeNode> subNodes)
         {
-            if (subNodes == null) throw new ArgumentNullException(nameof(subNodes));
+            if (subNodes is null) throw new ArgumentNullException(nameof(subNodes));
             if (subNodes.Any()) throw new ArgumentException("subNodes cannot contain any nodes for a TextNode");
             return this;
         }
-        internal override SyntaxTreeNode AcceptVisitor(SyntaxTreeVisitor visitor)
+        internal override SyntaxTreeNode? AcceptVisitor(SyntaxTreeVisitor visitor)
         {
-            if (visitor == null) throw new ArgumentNullException(nameof(visitor));
+            if (visitor is null) throw new ArgumentNullException(nameof(visitor));
             return visitor.Visit(this);
         }
 

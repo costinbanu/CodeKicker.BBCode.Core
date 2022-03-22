@@ -6,7 +6,7 @@ namespace CodeKicker.BBCode.Core
     {
         public const string ContentPlaceholderName = "content";
 
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, BBTagClosingStyle tagClosingClosingStyle, Func<string, string> contentTransformer, bool enableIterationElementBehavior, int id, string bbcodeUid = "", bool allowUrlProcessingAsText = true, params BBAttribute[] attributes)
+        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, BBTagClosingStyle tagClosingClosingStyle, Func<string, string>? contentTransformer, bool enableIterationElementBehavior, int id, string bbcodeUid = "", bool allowUrlProcessingAsText = true, params BBAttribute[] attributes)
         {
             if (!Enum.IsDefined(typeof(BBTagClosingStyle), tagClosingClosingStyle)) throw new ArgumentException(null, nameof(tagClosingClosingStyle));
 
@@ -23,12 +23,12 @@ namespace CodeKicker.BBCode.Core
             AllowUrlProcessingAsText = allowUrlProcessingAsText;
         }
         
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, BBTagClosingStyle tagClosingClosingStyle, Func<string, string> contentTransformer, int id, string bbcodeUid = "", bool allowUrlProcessingAsText = true, params BBAttribute[] attributes)
+        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, BBTagClosingStyle tagClosingClosingStyle, Func<string, string>? contentTransformer, int id, string bbcodeUid = "", bool allowUrlProcessingAsText = true, params BBAttribute[] attributes)
             : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, tagClosingClosingStyle, contentTransformer, false, id, bbcodeUid, allowUrlProcessingAsText, attributes)
         {
         }
 
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, bool requireClosingTag, Func<string, string> contentTransformer, int id, string bbcodeUid = "", bool allowUrlProcessingAsText = true, params BBAttribute[] attributes)
+        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, bool requireClosingTag, Func<string, string>? contentTransformer, int id, string bbcodeUid = "", bool allowUrlProcessingAsText = true, params BBAttribute[] attributes)
             : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, requireClosingTag ? BBTagClosingStyle.RequiresClosingTag : BBTagClosingStyle.AutoCloseElement, contentTransformer, id, bbcodeUid, allowUrlProcessingAsText, attributes)
         {
         }
@@ -56,13 +56,13 @@ namespace CodeKicker.BBCode.Core
             get { return TagClosingStyle == BBTagClosingStyle.RequiresClosingTag; }
         }
         public BBTagClosingStyle TagClosingStyle { get; private set; }
-        public Func<string, string> ContentTransformer { get; private set; } //allows for custom modification of the tag content before rendering takes place
+        public Func<string, string>? ContentTransformer { get; private set; } //allows for custom modification of the tag content before rendering takes place
         public BBAttribute[] Attributes { get; private set; }
         public int Id { get; private set; }
         public string BBCodeUid { get; }
         public bool AllowUrlProcessingAsText { get; }
 
-        public BBAttribute FindAttribute(string name)
+        public BBAttribute? FindAttribute(string name)
         {
             return Array.Find(Attributes, a => a.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         }

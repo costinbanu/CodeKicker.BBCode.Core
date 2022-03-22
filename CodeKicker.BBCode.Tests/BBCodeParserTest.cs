@@ -223,7 +223,7 @@ namespace CodeKicker.BBCode.Core.Tests
         public void Roundtrip2()
         {
             var parser = BBCodeTestUtil.GetParserForTest(RandomValue.Object<ErrorMode>(), false, BBTagClosingStyle.AutoCloseElement, false);
-            SequenceNode tree;
+            SequenceNode? tree;
             try
             {
                 tree = parser.ParseSyntaxTree(RandomValue.String());
@@ -233,7 +233,7 @@ namespace CodeKicker.BBCode.Core.Tests
                 tree = null;
             }
 
-            var bbcode = tree.ToBBCode();
+            var bbcode = tree?.ToBBCode();
             var tree2 = parser.ParseSyntaxTree(bbcode);
             Assert.True(tree == tree2);
         }
@@ -257,13 +257,13 @@ namespace CodeKicker.BBCode.Core.Tests
 
         static void AssertTextNodesNotSplit(SyntaxTreeNode node)
         {
-            if (node.SubNodes != null)
+            if (node.SubNodes is not null)
             {
-                SyntaxTreeNode lastNode = null;
+                SyntaxTreeNode? lastNode = null;
                 for (int i = 0; i < node.SubNodes.Count; i++)
                 {
                     AssertTextNodesNotSplit(node.SubNodes[i]);
-                    if (lastNode != null)
+                    if (lastNode is not null)
                         Assert.False(lastNode is TextNode && node.SubNodes[i] is TextNode);
                     lastNode = node.SubNodes[i];
                 }

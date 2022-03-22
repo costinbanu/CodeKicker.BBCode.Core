@@ -16,12 +16,12 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
         public SequenceNode(SyntaxTreeNodeCollection subNodes)
             : base(subNodes)
         {
-            if (subNodes == null) throw new ArgumentNullException(nameof(subNodes));
+            if (subNodes is null) throw new ArgumentNullException(nameof(subNodes));
         }
         public SequenceNode(IEnumerable<SyntaxTreeNode> subNodes)
             : base(subNodes)
         {
-            if (subNodes == null) throw new ArgumentNullException(nameof(subNodes));
+            if (subNodes is null) throw new ArgumentNullException(nameof(subNodes));
         }
 
         public override string ToHtml()
@@ -63,12 +63,12 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
 
         public override SyntaxTreeNode SetSubNodes(IEnumerable<SyntaxTreeNode> subNodes)
         {
-            if (subNodes == null) throw new ArgumentNullException(nameof(subNodes));
+            if (subNodes is null) throw new ArgumentNullException(nameof(subNodes));
             return new SequenceNode(subNodes);
         }
-        internal override SyntaxTreeNode AcceptVisitor(SyntaxTreeVisitor visitor)
+        internal override SyntaxTreeNode? AcceptVisitor(SyntaxTreeVisitor visitor)
         {
-            if (visitor == null) throw new ArgumentNullException(nameof(visitor));
+            if (visitor is null) throw new ArgumentNullException(nameof(visitor));
             return visitor.Visit(this);
         }
         protected override bool EqualsCore(SyntaxTreeNode b)

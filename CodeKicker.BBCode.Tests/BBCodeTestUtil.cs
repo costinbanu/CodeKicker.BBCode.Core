@@ -22,34 +22,31 @@ namespace CodeKicker.BBCode.Core.Tests
                 case 0:
                     var text = RandomValue.String();
                     return new TextNode(text);
+
                 case 1:
                     var tag = allowedTags[RandomValue.Int(allowedTags.Length, 0)];
                     var node = new TagNode(tag);
 
                     AddSubnodes(allowedTags, node);
 
-                    if (tag.Attributes != null)
+                    if (tag.Attributes is not null)
                     {
                         var selectedIds = new List<string>();
                         foreach (var attr in tag.Attributes)
                         {
                             if (!selectedIds.Contains(attr.ID) && RandomValue.Bool())
                             {
-                                string val;
-                                do
-                                {
-                                    val = RandomValue.String();
-                                } while (val.IndexOfAny("[] ".ToCharArray()) != -1);
-
+                                var specialChars = "[] ";
+                                var val = new string($"{RandomValue.String()}{specialChars[RandomValue.Int(2, 0)]}".OrderBy(_ => RandomValue.Int()).ToArray());
                                 node.AttributeValues[attr] = val;
                                 selectedIds.Add(attr.ID);
                             }
                         }
                     }
                     return node;
+
                 default:
-                    //PexAssume.Fail();
-                    return null;
+                    throw new Exception("Fail!");
             }
         }
         static void AddSubnodes(BBTag[] allowedTags, SyntaxTreeNode node)
@@ -78,8 +75,8 @@ namespace CodeKicker.BBCode.Core.Tests
                     new BBTag("*", "<li>", "</li>", true, listItemBBTagClosingStyle, null, enableIterationElementBehavior, 13), 
                     new BBTag("url", "<a href=\"${href}\">", "</a>", 3, "", false, new BBAttribute("href", ""), new BBAttribute("href", "href")), 
                     new BBTag("url2", "<a href=\"${href}\">", "</a>", 14, "", false, new BBAttribute("href", "", GetUrl2Href), new BBAttribute("href", "href", GetUrl2Href)), 
-                    !includePlaceholder ? null : new BBTag("placeholder", "${name}", "", false, BBTagClosingStyle.LeafElementWithoutContent, null, 15, "", true, new BBAttribute("name", "", name => "xxx" + name.AttributeValue + "yyy")), 
-                }.Where(x => x != null).ToArray());
+                    !includePlaceholder ? null! : new BBTag("placeholder", "${name}", "", false, BBTagClosingStyle.LeafElementWithoutContent, null, 15, "", true, new BBAttribute("name", "", name => "xxx" + name.AttributeValue + "yyy")), 
+                }.Where(x => x is not null).ToList());
         }
 
         public static BBCodeParser GetCustomParser()
@@ -88,7 +85,6 @@ namespace CodeKicker.BBCode.Core.Tests
             {
                 if (!url.StartsWith("www", StringComparison.InvariantCultureIgnoreCase) && !url.StartsWith("http", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    //return "";
                     throw new ArgumentException("Bad URL formatting");
                 }
                 else if (url.StartsWith("www", StringComparison.InvariantCultureIgnoreCase))
@@ -111,7 +107,7 @@ namespace CodeKicker.BBCode.Core.Tests
                     new BBTag("list", "<${attr}>", "</${attr}>", true, true, 9, "", true,
                         new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\"")),
                     new BBTag("url", "<a href=\"${href}\" target=\"_blank\">", "</a>", 3, "", false,
-                        new BBAttribute("href", "", a => urlTransformer(string.IsNullOrWhiteSpace(a?.AttributeValue) ? a.TagContent : a.AttributeValue), HtmlEncodingMode.UnsafeDontEncode)),
+                        new BBAttribute("href", "", a => urlTransformer(string.IsNullOrWhiteSpace(a?.AttributeValue) ? a!.TagContent! : a.AttributeValue!), HtmlEncodingMode.UnsafeDontEncode)),
                     new BBTag("color", "<span style=\"color:${code}\">", "</span>", 6, "", true,
                         new BBAttribute("code", "")),
                     new BBTag("size", "<span style=\"font-size:${fsize}\">", "</span>", 5, "", true,
@@ -121,7 +117,7 @@ namespace CodeKicker.BBCode.Core.Tests
             });
         }
 
-        static string GetUrl2Href(IAttributeRenderingContext attributeRenderingContext)
+        static string? GetUrl2Href(IAttributeRenderingContext attributeRenderingContext)
         {
             if (!string.IsNullOrEmpty(attributeRenderingContext.AttributeValue)) return attributeRenderingContext.AttributeValue;
 
@@ -135,7 +131,7 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             return new BBCodeParser(errorMode, null, new[]
                 {
-                    new BBTag("x", "${content}${x}", "${y}", true, true, 1, "", true, new BBAttribute("x", "x"), new BBAttribute("y", "y", x => x.AttributeValue)), 
+                    new BBTag("x", "${content}${x}", "${y}", true, true, 1, "", true, new BBAttribute("x", "x"), new BBAttribute("y", "y", x => x.AttributeValue!)), 
                 });
         }
 

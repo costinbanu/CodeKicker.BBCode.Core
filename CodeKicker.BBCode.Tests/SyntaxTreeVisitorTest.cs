@@ -15,11 +15,13 @@ namespace CodeKicker.BBCode.Core.Tests
             Assert.True(ReferenceEquals(tree, tree2));
         }
 
-        [Fact]
-        public void IdentityModifiedTreesAreEqual()
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void IdentityModifiedTreesAreEqual(bool useBaseClassResult)
         {
             var tree = BBCodeTestUtil.GetAnyTree();
-            var tree2 = new IdentitiyModificationSyntaxTreeVisitor().Visit(tree);
+            var tree2 = new IdentitiyModificationSyntaxTreeVisitor(useBaseClassResult).Visit(tree);
             Assert.True(tree == tree2);
         }
 
@@ -33,41 +35,48 @@ namespace CodeKicker.BBCode.Core.Tests
 
         class IdentitiyModificationSyntaxTreeVisitor : SyntaxTreeVisitor
         {
-            protected override SyntaxTreeNode Visit(TextNode node)
-            {
-                if (!RandomValue.Bool()) return base.Visit(node);
+            bool _useBaseClassResult;
 
-                return new TextNode(node.Text, node.HtmlTemplate);
+            internal IdentitiyModificationSyntaxTreeVisitor(bool useBaseClassResult)
+            {
+                _useBaseClassResult = useBaseClassResult;
             }
-            protected override SyntaxTreeNode Visit(SequenceNode node)
+
+            protected override SyntaxTreeNode? Visit(TextNode? node)
+            {
+                if (_useBaseClassResult) return base.Visit(node);
+
+                return new TextNode(node?.Text, node?.HtmlTemplate);
+            }
+            protected override SyntaxTreeNode? Visit(SequenceNode? node)
             {
                 var baseResult = base.Visit(node);
-                if (!RandomValue.Bool()) return baseResult;
-                return baseResult.SetSubNodes(baseResult.SubNodes.ToList());
+                if (_useBaseClassResult) return baseResult;
+                return baseResult?.SetSubNodes(baseResult.SubNodes.ToList());
             }
-            protected override SyntaxTreeNode Visit(TagNode node)
+            protected override SyntaxTreeNode? Visit(TagNode? node)
             {
                 var baseResult = base.Visit(node);
-                if (!RandomValue.Bool()) return baseResult;
-                return baseResult.SetSubNodes(baseResult.SubNodes.ToList());
+                if (_useBaseClassResult) return baseResult;
+                return baseResult?.SetSubNodes(baseResult.SubNodes.ToList());
             }
         }
 
         class TextModificationSyntaxTreeVisitor : SyntaxTreeVisitor
         {
-            protected override SyntaxTreeNode Visit(TextNode node)
+            protected override SyntaxTreeNode Visit(TextNode? node)
             {
-                return new TextNode(node.Text + "x", node.HtmlTemplate);
+                return new TextNode(node?.Text + "x", node?.HtmlTemplate);
             }
-            protected override SyntaxTreeNode Visit(SequenceNode node)
+            protected override SyntaxTreeNode? Visit(SequenceNode? node)
             {
                 var baseResult = base.Visit(node);
-                return baseResult.SetSubNodes(baseResult.SubNodes.Concat(new[] { new TextNode("y") }));
+                return baseResult?.SetSubNodes(baseResult.SubNodes.Concat(new[] { new TextNode("y") }));
             }
-            protected override SyntaxTreeNode Visit(TagNode node)
+            protected override SyntaxTreeNode? Visit(TagNode? node)
             {
                 var baseResult = base.Visit(node);
-                return baseResult.SetSubNodes(baseResult.SubNodes.Concat(new[] { new TextNode("z") }));
+                return baseResult?.SetSubNodes(baseResult.SubNodes.Concat(new[] { new TextNode("z") }));
             }
         }
     }

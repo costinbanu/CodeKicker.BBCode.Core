@@ -82,20 +82,22 @@ namespace CodeKicker.BBCode.Core.Tests
             ReplaceTextSpans_ManualTestCases_TestCase("[b]a[/b]", "[b]x[/b]", txt => new[] { new TextSpanReplaceInfo(0, 1, new TextNode("x")), }, null);
 
             ReplaceTextSpans_ManualTestCases_TestCase("abc[b]def[/b]ghi[i]jkl[/i]", "xyabc[b]z[/b]g2i1[i]jkl[/i]",
-                txt =>
-                    txt == "abc" ? new[] { new TextSpanReplaceInfo(0, 0, new TextNode("x")), new TextSpanReplaceInfo(0, 0, new TextNode("y")), } :
-                    txt == "def" ? new[] { new TextSpanReplaceInfo(0, 3, new TextNode("z")), } :
-                    txt == "ghi" ? new[] { new TextSpanReplaceInfo(1, 1, new TextNode("2")), new TextSpanReplaceInfo(3, 0, new TextNode("1")), } :
-                    txt == "jkl" ? new[] { new TextSpanReplaceInfo(0, 0, new TextNode("w")), } :
-                    null,
-                    tagNode => tagNode.Tag.Name != "i");
+                txt => txt switch
+                {
+                    "abc" => new[] { new TextSpanReplaceInfo(0, 0, new TextNode("x")), new TextSpanReplaceInfo(0, 0, new TextNode("y")), },
+                    "def" => new[] { new TextSpanReplaceInfo(0, 3, new TextNode("z")), },
+                    "ghi" => new[] { new TextSpanReplaceInfo(1, 1, new TextNode("2")), new TextSpanReplaceInfo(3, 0, new TextNode("1")), },
+                    "jkl" => new[] { new TextSpanReplaceInfo(0, 0, new TextNode("w")), },
+                    _ => null
+                },
+                tagNode => tagNode.Tag.Name != "i");
         }
 
-        static void ReplaceTextSpans_ManualTestCases_TestCase(string bbCode, string expected, Func<string, IList<TextSpanReplaceInfo>> getTextSpansToReplace, Func<TagNode, bool> tagFilter)
+        static void ReplaceTextSpans_ManualTestCases_TestCase(string bbCode, string expected, Func<string, IList<TextSpanReplaceInfo>?>? getTextSpansToReplace, Func<TagNode, bool>? tagFilter)
         {
             var tree1 = BBCodeTestUtil.GetParserForTest(ErrorMode.Strict, false, BBTagClosingStyle.AutoCloseElement, false).ParseSyntaxTree(bbCode);
             var tree2 = BBCode.ReplaceTextSpans(tree1, getTextSpansToReplace ?? (txt => Array.Empty<TextSpanReplaceInfo>()), tagFilter);
-            Assert.Equal(expected, tree2.ToBBCode());
+            Assert.Equal(expected, tree2!.ToBBCode());
         }
 
         [Fact]
@@ -111,7 +113,7 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             var tree1 = BBCodeTestUtil.GetAnyTree();
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => new[] { new TextSpanReplaceInfo(0, 0, null), }, null);
-            Assert.Equal(tree1.ToBBCode(), tree2.ToBBCode());
+            Assert.Equal(tree1.ToBBCode(), tree2?.ToBBCode());
         }
 
         [Fact]
@@ -119,7 +121,7 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             var tree1 = BBCodeTestUtil.GetAnyTree();
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => new[] { new TextSpanReplaceInfo(0, txt.Length, new TextNode("x")), }, null);
-            Assert.True(!tree2.ToBBCode().Contains("a"));
+            Assert.Equal(false, tree2?.ToBBCode().Contains('a'));
         }
 
         [Fact]
@@ -158,11 +160,7 @@ namespace CodeKicker.BBCode.Core.Tests
                                     })
                                 .ToArray();
                     }, null);
-                var bbCode = tree2.ToBBCode();
-                if (!chosenTexts.All(s => bbCode.Contains(s)))
-                {
-
-                }
+                var bbCode = tree2?.ToBBCode();
                 Assert.All(chosenTexts, s => Assert.Contains(s, bbCode));
             }
         }
@@ -200,16 +198,16 @@ namespace CodeKicker.BBCode.Core.Tests
 
         class TextAssertVisitor : SyntaxTreeVisitor
         {
-            readonly Action<string> assertFunction;
+            readonly Action<string?> assertFunction;
 
-            public TextAssertVisitor(Action<string> assertFunction)
+            public TextAssertVisitor(Action<string?> assertFunction)
             {
                 this.assertFunction = assertFunction;
             }
 
-            protected override SyntaxTreeNode Visit(TextNode node)
+            protected override SyntaxTreeNode? Visit(TextNode? node)
             {
-                assertFunction(node.Text);
+                assertFunction(node?.Text);
                 return node;
             }
         }

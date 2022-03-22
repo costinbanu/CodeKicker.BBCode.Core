@@ -17,7 +17,7 @@ namespace CodeKicker.BBCode.Core
     {
         public BBCodeParser(IList<BBTag> tags) : this(ErrorMode.ErrorFree, null, tags) { }
 
-        public BBCodeParser(ErrorMode errorMode, string textNodeHtmlTemplate, IList<BBTag> tags)
+        public BBCodeParser(ErrorMode errorMode, string? textNodeHtmlTemplate, IList<BBTag> tags)
         {
             if (!Enum.IsDefined(typeof(ErrorMode), errorMode)) throw new ArgumentOutOfRangeException(nameof(errorMode));
             ErrorMode = errorMode;
@@ -27,7 +27,7 @@ namespace CodeKicker.BBCode.Core
         }
 
         public IList<BBTag> Tags { get; private set; }
-        public string TextNodeHtmlTemplate { get; private set; }
+        public string? TextNodeHtmlTemplate { get; private set; }
         public ErrorMode ErrorMode { get; private set; }
         public Bitfield Bitfield { get; private set; }
 
@@ -38,16 +38,16 @@ namespace CodeKicker.BBCode.Core
 
         public virtual string ToHtml(string bbCode, string code = "")
         {
-            if (bbCode == null) throw new ArgumentNullException(nameof(bbCode));
+            if (bbCode is null) throw new ArgumentNullException(nameof(bbCode));
             return ParseSyntaxTree(bbCode, code).ToHtml();
         }
 
-        public virtual SequenceNode ParseSyntaxTree(string bbCode, string code = "")
+        public virtual SequenceNode ParseSyntaxTree(string? bbCode, string code = "")
             => ParseSyntaxTreeImpl(bbCode, false, false, code).node;
 
-        private (SequenceNode node, Bitfield bitfield) ParseSyntaxTreeImpl(string bbCode, bool setBitfield, bool preserveWhitespace, string code = "", bool transformUrls = true)
+        private (SequenceNode node, Bitfield? bitfield) ParseSyntaxTreeImpl(string? bbCode, bool setBitfield, bool preserveWhitespace, string code = "", bool transformUrls = true)
         {
-            if (bbCode == null) throw new ArgumentNullException(nameof(bbCode));
+            if (bbCode is null) throw new ArgumentNullException(nameof(bbCode));
 
             Stack<SyntaxTreeNode> stack = new();
             var rootNode = new SequenceNode();
@@ -58,7 +58,7 @@ namespace CodeKicker.BBCode.Core
             while (stack.Count > 1) //close all tags that are still open and can be closed implicitly
             {
                 var node = (TagNode)stack.Pop();
-                if (node.Tag.RequiresClosingTag && ErrorMode == ErrorMode.Strict) throw new BBCodeParsingException(MessagesHelper.GetString("TagNotClosed", node.Tag.Name));
+                if (node.Tag.RequiresClosingTag && ErrorMode == ErrorMode.Strict) throw new BBCodeParsingException(MessagesHelper.GetString("TagNotClosed", node.Tag.Name)!);
             }
 
             if (stack.Count != 1)
@@ -77,14 +77,14 @@ namespace CodeKicker.BBCode.Core
         /// <param name="uid">BBCode UID</param>
         /// <param name="uidLength">BBCode UID length</param>
         /// <returns><see cref="Tuple{T1, T2, T3}"/> where the first item is the transformed text, the second is the bbcode uid field and the third is the bbcode bitfield</returns>
-        public (string bbCode, string uid, string bitfield) TransformForBackwardsCompatibility(string text, string uid = "", int uidLength = 8)
+        public (string bbCode, string uid, string? bitfield) TransformForBackwardsCompatibility(string text, string uid = "", int uidLength = 8)
         {
             try
             {
                 var actualUid = string.IsNullOrWhiteSpace(uid) ? ToBase36(Math.Abs(Convert.ToInt64($"0x{Guid.NewGuid().ToString("n").Substring(4, 16)}", 16))).Substring(0, uidLength) : uid;
                 var dummyParser = new BBCodeParser(ErrorMode.TryErrorCorrection, null, Tags.Select(x => new BBTag(x.Name, x.OpenTagTemplate, x.CloseTagTemplate, x.AutoRenderContent, x.TagClosingStyle, x.ContentTransformer, x.EnableIterationElementBehavior, x.Id, actualUid, x.AllowUrlProcessingAsText, x.Attributes)).ToList());
                 var (node, bitfield) = dummyParser.ParseSyntaxTreeImpl(text, true, true, uid, false);
-                return (node.ToLegacyBBCode(), actualUid, bitfield.GetBase64());
+                return (node.ToLegacyBBCode(), actualUid, bitfield?.GetBase64());
             }
             catch
             {
@@ -92,7 +92,7 @@ namespace CodeKicker.BBCode.Core
             }
         }
 
-        Bitfield IterateInText(string bbCode, Stack<SyntaxTreeNode> stack, bool preserveWhitespace, string code, bool setBitfield, bool transformUrls)
+        Bitfield? IterateInText(string bbCode, Stack<SyntaxTreeNode> stack, bool preserveWhitespace, string code, bool setBitfield, bool transformUrls)
         {
             var end = 0;
             var bitfield = setBitfield ? new Bitfield() : null;
@@ -133,7 +133,7 @@ namespace CodeKicker.BBCode.Core
             return result.ToString();
         }
 
-        bool MatchTagEnd(string bbCode, string code, ref int pos, Stack<SyntaxTreeNode> stack, bool preserveWhitespace, Bitfield bitfield = null)
+        bool MatchTagEnd(string bbCode, string code, ref int pos, Stack<SyntaxTreeNode> stack, bool preserveWhitespace, Bitfield? bitfield = null)
         {
             var openingNode = stack.Peek() as TagNode; //could also be a SequenceNode
             int end = pos;
@@ -145,17 +145,17 @@ namespace CodeKicker.BBCode.Core
                 return false;
             }
 
-            if (tagEnd != null)
+            if (tagEnd is not null)
             {
                 while (true)
                 {
                     openingNode = stack.Peek() as TagNode;
-                    if (bitfield != null && openingNode?.Tag?.Id != null)
+                    if (bitfield is not null && openingNode?.Tag?.Id is not null)
                     {
                         bitfield.Set(openingNode.Tag.Id);
                     }
-                    if (openingNode == null && ErrorOrReturn("TagNotOpened", tagEnd)) return false;
-                    Debug.Assert(openingNode != null); //ErrorOrReturn will either or throw make this stack frame exit
+                    if (openingNode is null && ErrorOrReturn("TagNotOpened", tagEnd)) return false;
+                    Debug.Assert(openingNode is not null); //ErrorOrReturn will either or throw make this stack frame exit
 
                     if (!openingNode.Tag.Name.Equals(tagEnd, StringComparison.OrdinalIgnoreCase))
                     {
@@ -189,7 +189,7 @@ namespace CodeKicker.BBCode.Core
 
             int end = pos;
             var tag = ParseTagStart(bbCode, code, ref end, preserveWhitespace);
-            if (tag != null)
+            if (tag is not null)
             {
                 if (tag.Tag.EnableIterationElementBehavior)
                 {
@@ -202,7 +202,7 @@ namespace CodeKicker.BBCode.Core
                     if (isThisTagAlreadyOnStack)
                     {
                         var openingNode = stack.Peek() as TagNode; //could also be a SequenceNode
-                        Debug.Assert(openingNode != null); //isThisTagAlreadyOnStack would have been false
+                        Debug.Assert(openingNode is not null); //isThisTagAlreadyOnStack would have been false
 
                         if (openingNode.Tag != tag.Tag && ErrorMode == ErrorMode.Strict && ErrorOrReturn("TagNotMatching", tag.Tag.Name, openingNode.Tag.Name)) return false;
 
@@ -249,7 +249,7 @@ namespace CodeKicker.BBCode.Core
             int end = pos;
 
             var textNode = ParseText(bbCode, ref end, stack, transformUrls);
-            if (textNode != null)
+            if (textNode is not null)
             {
                 AppendText(textNode, stack);
                 pos = end;
@@ -264,7 +264,7 @@ namespace CodeKicker.BBCode.Core
             var lastChild = currentNode.SubNodes.Count == 0 ? null : currentNode.SubNodes[currentNode.SubNodes.Count - 1] as TextNode;
 
             TextNode newChild;
-            if (lastChild == null)
+            if (lastChild is null)
                 newChild = new TextNode(textToAppend, TextNodeHtmlTemplate);
             else
                 newChild = new TextNode(lastChild.Text + textToAppend, TextNodeHtmlTemplate);
@@ -275,43 +275,43 @@ namespace CodeKicker.BBCode.Core
                 currentNode.SubNodes.Add(newChild);
         }
 
-        TagNode ParseTagStart(string input, string code, ref int pos, bool preserveWhitespace)
+        TagNode? ParseTagStart(string input, string code, ref int pos, bool preserveWhitespace)
         {
             var end = pos;
 
             if (!ParseChar(input, ref end, '[')) return null;
 
             var tagName = ParseName(input, code, ref end);
-            if (tagName == null) return null;
+            if (tagName is null) return null;
 
             var tag = Tags.SingleOrDefault(t => t.Name.Equals(tagName, StringComparison.OrdinalIgnoreCase));
-            if (tag == null && ErrorOrReturn("UnknownTag", tagName)) return null;
+            if (tag is null && ErrorOrReturn("UnknownTag", tagName)) return null;
 
             var result = new TagNode(tag);
 
-            var defaultAttrValue = ParseAttributeValue(input, code, ref end, tag.GreedyAttributeProcessing);
-            if (defaultAttrValue != null)
+            var defaultAttrValue = ParseAttributeValue(input, code, ref end, tag!.GreedyAttributeProcessing);
+            if (defaultAttrValue is not null)
             {
                 var attr = tag.FindAttribute("");
-                if (attr == null && ErrorOrReturn("UnknownAttribute", tag.Name, "\"Default Attribute\"")) return null;
-                result.AttributeValues.Add(attr, defaultAttrValue);
+                if (attr is null && ErrorOrReturn("UnknownAttribute", tag.Name, "\"Default Attribute\"")) return null;
+                result.AttributeValues.Add(attr!, defaultAttrValue);
             }
 
             while (true)
             {
                 ParseWhitespace(input, ref end);
                 var attrName = ParseName(input, code, ref end);
-                if (attrName == null) break;
+                if (attrName is null) break;
 
                 var attrVal = ParseAttributeValue(input, code, ref end);
-                if (attrVal == null && ErrorOrReturn("")) return null;
+                if (attrVal is null && ErrorOrReturn("")) return null;
 
-                if (tag.Attributes == null && ErrorOrReturn("UnknownTag", tag.Name)) return null;
+                if (tag.Attributes is null && ErrorOrReturn("UnknownTag", tag.Name)) return null;
                 var attr = tag.FindAttribute(attrName);
-                if (attr == null && ErrorOrReturn("UnknownTag", tag.Name, attrName)) return null;
+                if (attr is null && ErrorOrReturn("UnknownTag", tag.Name, attrName)) return null;
 
-                if (result.AttributeValues.ContainsKey(attr) && ErrorOrReturn("DuplicateAttribute", tagName, attrName)) return null;
-                result.AttributeValues.Add(attr, attrVal);
+                if (result.AttributeValues.ContainsKey(attr!) && ErrorOrReturn("DuplicateAttribute", tagName, attrName)) return null;
+                result.AttributeValues.Add(attr!, attrVal!);
             }
             if (!ParseChar(input, ref end, ']', code) && ErrorOrReturn("TagNotClosed", tagName)) return null;
 
@@ -323,7 +323,8 @@ namespace CodeKicker.BBCode.Core
             pos = end;
             return result;
         }
-        string ParseTagEnd(string input, string code, ref int pos, bool preserveWhitespace)
+
+        string? ParseTagEnd(string input, string code, ref int pos, bool preserveWhitespace)
         {
             var end = pos;
 
@@ -331,7 +332,7 @@ namespace CodeKicker.BBCode.Core
             if (!ParseChar(input, ref end, '/')) return null;
 
             var tagName = ParseName(input, code, ref end);
-            if (tagName == null) return null;
+            if (tagName is null) return null;
 
             ParseWhitespace(input, ref end);
 
@@ -343,7 +344,7 @@ namespace CodeKicker.BBCode.Core
 
             var tag = Tags.SingleOrDefault(t => t.Name.Equals(tagName, StringComparison.OrdinalIgnoreCase));
 
-            if (tag != null && tag.SuppressFirstNewlineAfter && !preserveWhitespace)
+            if (tag is not null && tag.SuppressFirstNewlineAfter && !preserveWhitespace)
             {
                 ParseLimitedWhitespace(input, ref end, 1);
             }
@@ -351,7 +352,8 @@ namespace CodeKicker.BBCode.Core
             pos = end;
             return tagName;
         }
-        string ParseText(string input, ref int pos, Stack<SyntaxTreeNode> stack, bool transformUrls)
+
+        string? ParseText(string input, ref int pos, Stack<SyntaxTreeNode> stack, bool transformUrls)
         {
             int end = pos;
             bool escapeFound = false;
@@ -368,7 +370,7 @@ namespace CodeKicker.BBCode.Core
                 if (input[end] == ']' && !escapeFound)
                 {
                     if (ErrorMode == ErrorMode.Strict)
-                        throw new BBCodeParsingException(MessagesHelper.GetString("NonescapedChar"));
+                        throw new BBCodeParsingException(MessagesHelper.GetString("NonescapedChar")!);
                 }
 
                 if (input[end] == '\\' && !escapeFound)
@@ -381,7 +383,7 @@ namespace CodeKicker.BBCode.Core
                     if (!(input[end] == '[' || input[end] == ']' || input[end] == '\\'))
                     {
                         if (ErrorMode == ErrorMode.Strict)
-                            throw new BBCodeParsingException(MessagesHelper.GetString("EscapeChar"));
+                            throw new BBCodeParsingException(MessagesHelper.GetString("EscapeChar")!);
                     }
                     escapeFound = false;
                 }
@@ -499,7 +501,7 @@ namespace CodeKicker.BBCode.Core
             return result == "" ? null : result;
         }
 
-        static string ParseName(string input, string code, ref int pos)
+        static string? ParseName(string input, string code, ref int pos)
         {
             int end = pos;
             for (; end < input.Length && (char.ToLower(input[end]) >= 'a' && char.ToLower(input[end]) <= 'z' || (input[end]) >= '0' && (input[end]) <= '9' || input[end] == '*' || input[end] == '-'); end++) ;
@@ -511,7 +513,7 @@ namespace CodeKicker.BBCode.Core
             pos = end;
             return result;
         }
-        static string ParseAttributeValue(string input, string code, ref int pos, bool greedyProcessing = false)
+        static string? ParseAttributeValue(string input, string code, ref int pos, bool greedyProcessing = false)
         {
             var end = pos;
 
@@ -592,7 +594,7 @@ namespace CodeKicker.BBCode.Core
             pos = end;
             return found;
         }
-        static bool ParseChar(string input, ref int pos, char c, string code = null)
+        static bool ParseChar(string input, ref int pos, char c, string? code = null)
         {
             if (pos < input.Length && input[pos] == c)
             {
@@ -622,7 +624,7 @@ namespace CodeKicker.BBCode.Core
         bool ErrorOrReturn(string msgKey, params string[] parameters)
         {
             if (ErrorMode == ErrorMode.ErrorFree) return true;
-            else throw new BBCodeParsingException(string.IsNullOrEmpty(msgKey) ? "" : MessagesHelper.GetString(msgKey, parameters));
+            else throw new BBCodeParsingException(MessagesHelper.GetString(msgKey, parameters) ?? string.Empty);
         }
     }
 

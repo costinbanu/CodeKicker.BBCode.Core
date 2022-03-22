@@ -16,13 +16,14 @@ namespace CodeKicker.BBCode.Core
             resMgr = new ResourceManager(typeof(Messages));
         }
 
-        public static string GetString(string key)
+        public static string? GetString(string key)
         {
             return resMgr.GetString(key);
         }
-        public static string GetString(string key, params string[] parameters)
+        public static string? GetString(string key, params string[] parameters)
         {
-            return string.Format(resMgr.GetString(key), parameters);
+            var format = resMgr.GetString(key);
+            return string.IsNullOrWhiteSpace(format) ? format : string.Format(format, parameters);
         }
     }
 
