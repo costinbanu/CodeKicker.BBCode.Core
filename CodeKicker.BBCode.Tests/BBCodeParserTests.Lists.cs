@@ -21,7 +21,7 @@ namespace CodeKicker.BBCode.Core.Tests
                 var bbcodes = new List<BBTag>
             {
                 new BBTag("*", "<li>", "</li>", 20, autoRenderContent: true, BBTagClosingStyle.AutoCloseElement, x => x, enableIterationElementBehavior: true),
-                new BBTag("list", "<${attr}>", "</${attr}>", autoRenderContent: true, requireClosingTag: true, 9, bbcodeUid: "", allowUrlProcessingAsText: true,
+                new BBTag("list", "<${attr}>", "</${attr}>", 9, autoRenderContent: true, bbcodeUid: "", allowUrlProcessingAsText: true,
                     attributes : new[] { new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\"") })
             };
                 var parser = new BBCodeParser(bbcodes);
@@ -82,7 +82,7 @@ namespace CodeKicker.BBCode.Core.Tests
                 var parser = new BBCodeParser(new List<BBTag>
             {
                     new BBTag("*", "<li>", "</li>", 20, autoRenderContent: true, BBTagClosingStyle.AutoCloseElement, contentTransformer: null, enableIterationElementBehavior: true),
-                    new BBTag("list", "<${attr}>", "</${attr}>", autoRenderContent: true, BBTagClosingStyle.RequiresClosingTag, null, 9, "", allowUrlProcessingAsText: true,
+                    new BBTag("list", "<${attr}>", "</${attr}>", 9, autoRenderContent: true, BBTagClosingStyle.RequiresClosingTag, contentTransformer: null, bbcodeUid : "", allowUrlProcessingAsText: true,
                         attributes: new[] {new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\"") })
             });
                 Assert.Equal(html, HttpUtility.HtmlDecode(parser.ToHtml(bbcode)));

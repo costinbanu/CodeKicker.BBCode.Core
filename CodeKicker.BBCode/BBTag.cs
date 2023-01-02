@@ -36,26 +36,6 @@ namespace CodeKicker.BBCode.Core
             AllowUrlProcessingAsText = allowUrlProcessingAsText;
             AllowChildren = allowChildren;
         }
-        
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, BBTagClosingStyle tagClosingClosingStyle, Func<string, string>? contentTransformer, int id, string bbcodeUid = "", bool allowUrlProcessingAsText = true, bool allowChildren = true, params BBAttribute[] attributes)
-            : this(name, openTagTemplate, closeTagTemplate,  id, autoRenderContent, tagClosingClosingStyle, contentTransformer, enableIterationElementBehavior: false, bbcodeUid, allowUrlProcessingAsText, allowChildren, attributes)
-        {
-        }
-
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, bool requireClosingTag, Func<string, string>? contentTransformer, int id, string bbcodeUid = "", bool allowUrlProcessingAsText = true, bool allowChildren = true, params BBAttribute[] attributes)
-            : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, requireClosingTag ? BBTagClosingStyle.RequiresClosingTag : BBTagClosingStyle.AutoCloseElement, contentTransformer, id, bbcodeUid, allowUrlProcessingAsText, allowChildren, attributes)
-        {
-        }
-
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, bool autoRenderContent, bool requireClosingTag, int id, string bbcodeUid = "", bool allowUrlProcessingAsText = true, bool allowChildren = true, params BBAttribute[] attributes)
-            : this(name, openTagTemplate, closeTagTemplate, autoRenderContent, requireClosingTag, null, id, bbcodeUid, allowUrlProcessingAsText, allowChildren, attributes)
-        {
-        }
-
-        public BBTag(string name, string openTagTemplate, string closeTagTemplate, int id, string bbcodeUid = "", bool allowUrlProcessingAsText = true, bool allowChildren = true, params BBAttribute[] attributes)
-            : this(name, openTagTemplate, closeTagTemplate, true, true, id, bbcodeUid, allowUrlProcessingAsText, allowChildren, attributes)
-        {
-        }
 
         public string Name { get; private set; }
         public string OpenTagTemplate { get; private set; }

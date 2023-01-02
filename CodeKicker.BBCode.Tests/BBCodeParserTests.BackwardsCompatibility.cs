@@ -230,7 +230,7 @@ namespace CodeKicker.BBCode.Core.Tests
                 var parser = new BBCodeParser(new List<BBTag>
             {
                     new BBTag("*", "<li>", "</li>", 20, autoRenderContent: true, BBTagClosingStyle.AutoCloseElement, contentTransformer: null, enableIterationElementBehavior: true),
-                    new BBTag("list", "<${attr}>", "</${attr}>", autoRenderContent: true, BBTagClosingStyle.RequiresClosingTag, contentTransformer: null, 9, "", allowUrlProcessingAsText: true,
+                    new BBTag("list", "<${attr}>", "</${attr}>", 9, autoRenderContent: true, BBTagClosingStyle.RequiresClosingTag, contentTransformer: null, bbcodeUid: "", allowUrlProcessingAsText: true,
                         attributes: new[] {new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\"") })
             });
                 var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility(bbcode);

@@ -72,13 +72,13 @@ namespace CodeKicker.BBCode.Core.Tests
                 new BBTag("i", "<span style=\"font-style:italic;\">", "</span>", 2),
                 new BBTag("u", "<span style=\"text-decoration:underline;\">", "</span>", 7),
                 new BBTag("code", "<pre style=\"font-family: ui-monospace;\">", "</pre>", 8),
-                new BBTag("img", "<img src=\"${content}\" />", "", autoRenderContent: false, requireClosingTag: true, 4),
+                new BBTag("img", "<img src=\"${content}\" />", "", 4, autoRenderContent: false),
                 new BBTag("quote", "<blockquote>", "</blockquote>", 0),
                 new BBTag("list", "<ul>", "</ul>", 9),
                 new BBTag("*", "<li>", "</li>", 13, autoRenderContent: true, listItemBBTagClosingStyle, contentTransformer: null, enableIterationElementBehavior),
-                new BBTag("url", "<a href=\"${href}\">", "</a>", 3, "", allowUrlProcessingAsText: false, attributes: new[] { new BBAttribute("href", ""), new BBAttribute("href", "href") }),
-                new BBTag("url2", "<a href=\"${href}\">", "</a>", 14, "", allowUrlProcessingAsText: false, attributes: new[] { new BBAttribute("href", "", GetUrl2Href), new BBAttribute("href", "href", GetUrl2Href) }),
-                !includePlaceholder ? null! : new BBTag("placeholder", "${name}", "", autoRenderContent: false, BBTagClosingStyle.LeafElementWithoutContent, contentTransformer: null, 15, "", allowUrlProcessingAsText: true, attributes: new[] { new BBAttribute("name", "", name => "xxx" + name.AttributeValue + "yyy") }), 
+                new BBTag("url", "<a href=\"${href}\">", "</a>", 3, bbcodeUid: "", allowUrlProcessingAsText: false, attributes: new[] { new BBAttribute("href", ""), new BBAttribute("href", "href") }),
+                new BBTag("url2", "<a href=\"${href}\">", "</a>", 14, bbcodeUid: "", allowUrlProcessingAsText: false, attributes: new[] { new BBAttribute("href", "", GetUrl2Href), new BBAttribute("href", "href", GetUrl2Href) }),
+                !includePlaceholder ? null! : new BBTag("placeholder", "${name}", "", 15, autoRenderContent: false, BBTagClosingStyle.LeafElementWithoutContent, contentTransformer: null, bbcodeUid: "", allowUrlProcessingAsText: true, attributes: new[] { new BBAttribute("name", "", name => "xxx" + name.AttributeValue + "yyy") }), 
             }.Where(x => x is not null).ToList());
 
         public static BBCodeParser GetCustomParser()
@@ -93,7 +93,7 @@ namespace CodeKicker.BBCode.Core.Tests
                     new BBTag("quote", "<blockquote class=\"PostQuote\">${name}", "</blockquote>", 0, bbcodeUid: "", allowUrlProcessingAsText: true,
                         attributes: new[] { new BBAttribute("name", "", (a) => string.IsNullOrWhiteSpace(a.AttributeValue) ? "" : $"<b>{HttpUtility.HtmlDecode(a.AttributeValue).Trim('"')}</b> wrote:<br/>", HtmlEncodingMode.UnsafeDontEncode) }) { GreedyAttributeProcessing = true },
                     new BBTag("*", "<li>", "</li>", 13, autoRenderContent: true, BBTagClosingStyle.AutoCloseElement, contentTransformer: null, enableIterationElementBehavior: true),
-                    new BBTag("list", "<${attr}>", "</${attr}>", autoRenderContent: true, requireClosingTag: true, 9, bbcodeUid: "", true,
+                    new BBTag("list", "<${attr}>", "</${attr}>", 9, autoRenderContent: true, bbcodeUid: "", allowUrlProcessingAsText: true,
                         attributes: new[] { new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\"") }),
                     new BBTag("url", "<a href=\"${href}\" target=\"_blank\">", "</a>", 3, bbcodeUid: "", allowUrlProcessingAsText: false,
                         attributes: new[] { new BBAttribute("href", "", a => urlTransformer(string.IsNullOrWhiteSpace(a?.AttributeValue) ? a!.TagContent! : a.AttributeValue!), HtmlEncodingMode.UnsafeDontEncode) }),
@@ -144,7 +144,7 @@ namespace CodeKicker.BBCode.Core.Tests
         public static BBCodeParser GetSimpleParserForTest(ErrorMode errorMode)
             => new BBCodeParser(errorMode, null, new[]
             {
-                new BBTag("x", "${content}${x}", "${y}", autoRenderContent: true, requireClosingTag: true, 1, bbcodeUid: "", true, attributes: new[] {new BBAttribute("x", "x"), new BBAttribute("y", "y", x => x.AttributeValue!) }), 
+                new BBTag("x", "${content}${x}", "${y}", 1, autoRenderContent: true, bbcodeUid: "", allowUrlProcessingAsText: true, attributes: new[] {new BBAttribute("x", "x"), new BBAttribute("y", "y", x => x.AttributeValue!) }), 
             });
 
         public static string SimpleBBEncodeForTest(string bbCode, ErrorMode errorMode)

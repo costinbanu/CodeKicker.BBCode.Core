@@ -4,7 +4,7 @@ CodeKicker.BBCode.Core
 This is a fork of the [original modification repository](https://github.com/Pablissimo/CodeKicker.BBCode-Mod).
 
 ## What's new
-* fully compatible with netstandard 2.1, net 5.0, net 6.0
+* fully compatible with netstandard 2.1, net 6.0, net 7.0
 * supports the bbcode uid feature of PHPBB 3.x. This feature is not fully documented anywhere, but [this forum thread](https://www.phpbb.com/community/viewtopic.php?t=1378765) should be a good place to start.
 * supports the bbcode [bitfield](https://www.phpbb.com/support/docs/en/3.1/kb/article/how-to-template-bitfield-and-bbcodes/) feature of PHPBB 3.x
 * fully backwards compatible with PHPBB 3.x (call `BBCodeParser.TransformForBackwardsCompatibility` on your own BBCode text to generate BBCode that can be parsed by a phpbb 3.0 engine)
