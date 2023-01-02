@@ -7,7 +7,7 @@ using System.Web;
 
 namespace CodeKicker.BBCode.Core.Tests
 {
-    public static class BBCodeTestUtil
+    public static class TestUtils
     {
         public static SequenceNode CreateRootNode(BBTag[] allowedTags)
         {
@@ -49,6 +49,7 @@ namespace CodeKicker.BBCode.Core.Tests
                     throw new Exception("Fail!");
             }
         }
+        
         static void AddSubnodes(BBTag[] allowedTags, SyntaxTreeNode node)
         {
             int count = RandomValue.Int(3, 0);
@@ -62,22 +63,20 @@ namespace CodeKicker.BBCode.Core.Tests
         }
 
         public static BBCodeParser GetParserForTest(ErrorMode errorMode, bool includePlaceholder, BBTagClosingStyle listItemBBTagClosingStyle, bool enableIterationElementBehavior)
-        {
-            return new BBCodeParser(errorMode, null, new[]
-                {
-                    new BBTag("b", "<b>", "</b>", 1), 
-                    new BBTag("i", "<span style=\"font-style:italic;\">", "</span>", 2), 
-                    new BBTag("u", "<span style=\"text-decoration:underline;\">", "</span>", 7), 
-                    new BBTag("code", "<pre class=\"prettyprint\">", "</pre>", 8), 
-                    new BBTag("img", "<img src=\"${content}\" />", "", false, true, 4), 
-                    new BBTag("quote", "<blockquote>", "</blockquote>", 0), 
-                    new BBTag("list", "<ul>", "</ul>", 9), 
-                    new BBTag("*", "<li>", "</li>", true, listItemBBTagClosingStyle, null, enableIterationElementBehavior, 13), 
-                    new BBTag("url", "<a href=\"${href}\">", "</a>", 3, "", false, new BBAttribute("href", ""), new BBAttribute("href", "href")), 
-                    new BBTag("url2", "<a href=\"${href}\">", "</a>", 14, "", false, new BBAttribute("href", "", GetUrl2Href), new BBAttribute("href", "href", GetUrl2Href)), 
-                    !includePlaceholder ? null! : new BBTag("placeholder", "${name}", "", false, BBTagClosingStyle.LeafElementWithoutContent, null, 15, "", true, new BBAttribute("name", "", name => "xxx" + name.AttributeValue + "yyy")), 
-                }.Where(x => x is not null).ToList());
-        }
+            => new BBCodeParser(errorMode, null, new[]
+            {
+                new BBTag("b", "<b>", "</b>", 1), 
+                new BBTag("i", "<span style=\"font-style:italic;\">", "</span>", 2), 
+                new BBTag("u", "<span style=\"text-decoration:underline;\">", "</span>", 7), 
+                new BBTag("code", "<pre style=\"font-family: ui-monospace;\">", "</pre>", 8), 
+                new BBTag("img", "<img src=\"${content}\" />", "", false, true, 4), 
+                new BBTag("quote", "<blockquote>", "</blockquote>", 0), 
+                new BBTag("list", "<ul>", "</ul>", 9), 
+                new BBTag("*", "<li>", "</li>", true, listItemBBTagClosingStyle, null, enableIterationElementBehavior, 13), 
+                new BBTag("url", "<a href=\"${href}\">", "</a>", 3, "", false, new BBAttribute("href", ""), new BBAttribute("href", "href")), 
+                new BBTag("url2", "<a href=\"${href}\">", "</a>", 14, "", false, new BBAttribute("href", "", GetUrl2Href), new BBAttribute("href", "href", GetUrl2Href)), 
+                !includePlaceholder ? null! : new BBTag("placeholder", "${name}", "", false, BBTagClosingStyle.LeafElementWithoutContent, null, 15, "", true, new BBAttribute("name", "", name => "xxx" + name.AttributeValue + "yyy")), 
+            }.Where(x => x is not null).ToList());
 
         public static BBCodeParser GetCustomParser()
         {
@@ -99,7 +98,7 @@ namespace CodeKicker.BBCode.Core.Tests
                     new BBTag("b", "<b>", "</b>", 1),
                     new BBTag("i", "<i>", "</i>", 2),
                     new BBTag("u", "<u>", "</u>", 7),
-                    new BBTag("code", "<pre class=\"prettyprint\">", "</pre>", 8, allowUrlProcessingAsText: false),
+                    new BBTag("code", "<pre style=\"font-family: ui-monospace;\">", "</pre>", 8, allowUrlProcessingAsText: false),
                     new BBTag("img", "<br/><img src=\"${content}\" /><br/>", "", false, BBTagClosingStyle.RequiresClosingTag, x => urlTransformer(x), false, 4, allowUrlProcessingAsText: false),
                     new BBTag("quote", "<blockquote class=\"PostQuote\">${name}", "</blockquote>", 0, "", true,
                         new BBAttribute("name", "", (a) => string.IsNullOrWhiteSpace(a.AttributeValue) ? "" : $"<b>{HttpUtility.HtmlDecode(a.AttributeValue).Trim('"')}</b> wrote:<br/>", HtmlEncodingMode.UnsafeDontEncode)) { GreedyAttributeProcessing = true },
@@ -128,23 +127,19 @@ namespace CodeKicker.BBCode.Core.Tests
         }
 
         public static BBCodeParser GetSimpleParserForTest(ErrorMode errorMode)
-        {
-            return new BBCodeParser(errorMode, null, new[]
-                {
-                    new BBTag("x", "${content}${x}", "${y}", true, true, 1, "", true, new BBAttribute("x", "x"), new BBAttribute("y", "y", x => x.AttributeValue!)), 
-                });
-        }
+            => new BBCodeParser(errorMode, null, new[]
+            {
+                new BBTag("x", "${content}${x}", "${y}", true, true, 1, "", true, new BBAttribute("x", "x"), new BBAttribute("y", "y", x => x.AttributeValue!)), 
+            });
 
         public static string SimpleBBEncodeForTest(string bbCode, ErrorMode errorMode)
-        {
-            return GetSimpleParserForTest(errorMode).ToHtml(bbCode);
-        }
+        => GetSimpleParserForTest(errorMode).ToHtml(bbCode);
 
         public static bool IsValid(string bbCode, ErrorMode errorMode)
         {
             try
             {
-                BBCodeParserTest.BBEncodeForTest(bbCode, errorMode);
+                BBEncodeForTest(bbCode, errorMode);
                 return true;
             }
             catch (Exception)
@@ -158,5 +153,11 @@ namespace CodeKicker.BBCode.Core.Tests
             var parser = GetParserForTest(RandomValue.Object<ErrorMode>(), true, RandomValue.Object<BBTagClosingStyle>(), false);
             return CreateRootNode(parser.Tags.ToArray());
         }
+
+        public static string BBEncodeForTest(string bbCode, ErrorMode errorMode)
+            => BBEncodeForTest(bbCode, errorMode, BBTagClosingStyle.AutoCloseElement, false);
+
+        public static string BBEncodeForTest(string bbCode, ErrorMode errorMode, BBTagClosingStyle listItemBbTagClosingStyle, bool enableIterationElementBehavior)
+            => GetParserForTest(errorMode, true, listItemBbTagClosingStyle, enableIterationElementBehavior).ToHtml(bbCode).Replace("\r", "").Replace("\n", "<br/>");
     }
 }

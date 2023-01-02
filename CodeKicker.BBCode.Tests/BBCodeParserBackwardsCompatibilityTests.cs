@@ -9,7 +9,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [Fact]
         public void Bitfield_WithUid_IsCorrect()
         {
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var input = "[color=#0000FF:2xgytwj6]Lorem ipsum [url=https%3A%2F%2Fgoogle.com:2xgytwj6]dolor sit amet[/url:2xgytwj6][/color:2xgytwj6], consectetur adipiscing elit";
             var (_, _, bitfield) = parser.TransformForBackwardsCompatibility(input, "2xgytwj6");
             Assert.Equal("Eg==", bitfield);
@@ -18,7 +18,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [Fact]
         public void Bitfield_WithoutUid_IsCorrect()
         {
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var input = "[color=#0000FF]Lorem ipsum [url=https%3A%2F%2Fgoogle.com]dolor sit amet[/url][/color], consectetur adipiscing elit";
             var (_, _, bitfield) = parser.TransformForBackwardsCompatibility(input);
             Assert.Equal("Eg==", bitfield);
@@ -28,7 +28,7 @@ namespace CodeKicker.BBCode.Core.Tests
         public void WhenNoFormatting_IsCorrect()
         {
             var text = "some plain text";
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             Assert.Equal(text, parser.ToHtml(text));
         }
 
@@ -36,7 +36,7 @@ namespace CodeKicker.BBCode.Core.Tests
         public void WhenSimpleFormatting_IsCorrect()
         {
             var text = "[b]simple formatting[/b]";
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal($"[b:{uid}]simple formatting[/b:{uid}]", bbCode);
         }
@@ -47,7 +47,7 @@ namespace CodeKicker.BBCode.Core.Tests
             var text =
 @"[b]simple     
      formatting[/b]";
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(
 $@"[b:{uid}]simple     
@@ -62,7 +62,7 @@ $@"[b:{uid}]simple
 @"[b]
         simple     
      formatting[/b]";
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(
 $@"[b:{uid}]
@@ -80,7 +80,7 @@ $@"[b:{uid}]
 
 
 [/b]";
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(
 $@"[b:{uid}]simple     
@@ -95,7 +95,7 @@ $@"[b:{uid}]simple
         public void WhenComplexFormatting_URL_IsCorrect()
         {
             var text = "[url=https://google.com]simple formatting[/url]";
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal($"[url=https://google.com:{uid}]simple formatting[/url:{uid}]", bbCode);
         }
@@ -108,7 +108,7 @@ $@"[b:{uid}]simple
     [*]item1
     [*]item2
 [/list]";
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(
 $@"[list:{uid}]
@@ -129,7 +129,7 @@ $@"[list:{uid}]
     [*][b][i]item3[/i] is not[/b] over yet
     [*]item4
 [/list]";
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(
 $@"[url=https://google.com:{uid}]some url right here[/url:{uid}][list:{uid}]
@@ -150,7 +150,7 @@ $@"[url=https://google.com:{uid}]some url right here[/url:{uid}][list:{uid}]
     [*]item1
     [*]item2
 [/list]";
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(
 $@"[list=1:{uid}]
@@ -164,7 +164,7 @@ $@"[list=1:{uid}]
         public void WhenNestedFormatting_IsCorrect()
         {
             var text = "[b]simple [i]formatting[/i][/b]";
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal($"[b:{uid}]simple [i:{uid}]formatting[/i:{uid}][/b:{uid}]", bbCode);
         }
@@ -173,7 +173,7 @@ $@"[list=1:{uid}]
         public void WhenWrongFormatting_Nesting_IsCorrect()
         {
             var text = "[b]simple [i]formatting[/b][/i]";
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(text, bbCode);
             Assert.NotNull(uid);
@@ -187,7 +187,7 @@ $@"[list=1:{uid}]
         [InlineData("[b]simple [b]formatting[/y][/i]")]
         public void WhenWrongFormatting_Typo_IsCorrect(string text)
         {
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility(text);
             Assert.Equal(text, bbCode);
             Assert.NotNull(uid);
@@ -197,7 +197,7 @@ $@"[list=1:{uid}]
         [Fact]
         public void InlineAttachment_IsCorrect()
         {
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility("[attachment=7]01.PNG[/attachment]");
             Assert.Equal($"[attachment=7:{uid}]<!-- ia7 -->01.PNG<!-- ia7 -->[/attachment:{uid}]", bbCode);
             Assert.NotNull(uid);
@@ -207,7 +207,7 @@ $@"[list=1:{uid}]
         [Fact]
         public void CarriageReturns_AreRemoved()
         {
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility("[url=\"https://google.com\"]\r\n[b]a link[/b]\r\n[/url]");
             Assert.Equal($"[url=&quot;https://google.com&quot;:{uid}]\n[b:{uid}]a link[/b:{uid}]\n[/url:{uid}]", bbCode);
             Assert.NotNull(uid);
@@ -224,7 +224,7 @@ $@"[list=1:{uid}]
         [InlineData("[quote=\"user\"]aaa[/quote]", "[quote=&quot;user&quot;:7465hfgt]aaa[/quote:7465hfgt]", "7465hfgt")]
         public void EscapeHtml_IsCorrect(string input, string expected, string uid)
         {
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, _, _) = parser.TransformForBackwardsCompatibility(input, uid);
             Assert.Equal(expected, bbCode);
         }
@@ -251,7 +251,7 @@ $@"[list=1:{uid}]
         [InlineData("www.google.com [b]something[/b]", "www.google.com [b:7364529]something[/b:7364529]", "7364529")]
         public void PlainTextLinks_AreNotTransformed(string input, string expected, string uid)
         {
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (result, _, _) = parser.TransformForBackwardsCompatibility(input, uid);
             Assert.Equal(expected, result);
         }
@@ -262,7 +262,7 @@ $@"[list=1:{uid}]
         [InlineData("https://www.google.com/?q=something+longer+to+search+for\n\n[b]something[/b]", "<!-- m --><a href=\"https://www.google.com/?q=something+longer+to+search+for\" target=\"_blank\">https://www.google.com/?q=something+long ... arch+for</a><!-- m --><br/><br/><b>something</b>")]
         public void TransformedText_IsParsedCorrectly(string input, string expected)
         {
-            var parser = BBCodeTestUtil.GetCustomParser();
+            var parser = TestUtils.GetCustomParser();
             var (bbCode, uid, _) = parser.TransformForBackwardsCompatibility(input);
             Assert.Equal(expected, HttpUtility.HtmlDecode(parser.ToHtml(bbCode, uid)));
         }

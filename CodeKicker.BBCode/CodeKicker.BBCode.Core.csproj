@@ -1,26 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.1;net5.0;net6.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.1;net6.0;net7.0</TargetFrameworks>
 	</PropertyGroup>
 
   <PropertyGroup>
     <PackageId>CodeKicker.BBCode.Core</PackageId>
-    <Version>3.0.0</Version>
+    <Version>3.1.0</Version>
     <Authors>Costin Banu</Authors>
     <Description>A .NET Core compatible fork of CodeKicker.BBCode with extra features and backwards compatibility support</Description>
     <PackageProjectUrl>https://github.com/costinbanu/CodeKicker.BBCode.Core</PackageProjectUrl>
     <RepositoryUrl>https://github.com/costinbanu/CodeKicker.BBCode.Core</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageReleaseNotes>Switched to net6</PackageReleaseNotes>
+    <PackageReleaseNotes>Net 7.0 support; parsing updates</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.1</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

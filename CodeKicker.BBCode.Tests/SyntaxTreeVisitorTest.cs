@@ -10,7 +10,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [Fact]
         public void DefaultVisitorModifiesNothing()
         {
-            var tree = BBCodeTestUtil.GetAnyTree();
+            var tree = TestUtils.GetAnyTree();
             var tree2 = new SyntaxTreeVisitor().Visit(tree);
             Assert.True(ReferenceEquals(tree, tree2));
         }
@@ -20,7 +20,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [InlineData(false)]
         public void IdentityModifiedTreesAreEqual(bool useBaseClassResult)
         {
-            var tree = BBCodeTestUtil.GetAnyTree();
+            var tree = TestUtils.GetAnyTree();
             var tree2 = new IdentitiyModificationSyntaxTreeVisitor(useBaseClassResult).Visit(tree);
             Assert.True(tree == tree2);
         }
@@ -28,7 +28,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [Fact]
         public void TextModifiedTreesAreNotEqual()
         {
-            var tree = BBCodeTestUtil.GetAnyTree();
+            var tree = TestUtils.GetAnyTree();
             var tree2 = new TextModificationSyntaxTreeVisitor().Visit(tree);
             Assert.True(tree != tree2);
         }

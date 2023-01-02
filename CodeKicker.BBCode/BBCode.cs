@@ -31,7 +31,7 @@ namespace CodeKicker.BBCode.Core
                     new BBTag("b", "<b>", "</b>", 1), 
                     new BBTag("i", "<span style=\"font-style:italic;\">", "</span>", 2), 
                     new BBTag("u", "<span style=\"text-decoration:underline;\">", "</span>", 7), 
-                    new BBTag("code", "<pre class=\"prettyprint\">", "</pre>", 8), 
+                    new BBTag("code", "<pre style=\"font-family: ui-monospace;\">", "</pre>", 8), 
                     new BBTag("img", "<img src=\"${content}\" />", "", false, true, 4, allowUrlProcessingAsText: false), 
                     new BBTag("quote", "<blockquote>", "</blockquote>", 0), 
                     new BBTag("list", "<ul>", "</ul>", 9), 

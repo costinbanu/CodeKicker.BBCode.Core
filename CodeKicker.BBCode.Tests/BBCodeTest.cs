@@ -95,7 +95,7 @@ namespace CodeKicker.BBCode.Core.Tests
 
         static void ReplaceTextSpans_ManualTestCases_TestCase(string bbCode, string expected, Func<string, IList<TextSpanReplaceInfo>?>? getTextSpansToReplace, Func<TagNode, bool>? tagFilter)
         {
-            var tree1 = BBCodeTestUtil.GetParserForTest(ErrorMode.Strict, false, BBTagClosingStyle.AutoCloseElement, false).ParseSyntaxTree(bbCode);
+            var tree1 = TestUtils.GetParserForTest(ErrorMode.Strict, false, BBTagClosingStyle.AutoCloseElement, false).ParseSyntaxTree(bbCode);
             var tree2 = BBCode.ReplaceTextSpans(tree1, getTextSpansToReplace ?? (txt => Array.Empty<TextSpanReplaceInfo>()), tagFilter);
             Assert.Equal(expected, tree2!.ToBBCode());
         }
@@ -103,7 +103,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [Fact]
         public void ReplaceTextSpans_WhenNoModifications_TreeIsPreserved()
         {
-            var tree1 = BBCodeTestUtil.GetAnyTree();
+            var tree1 = TestUtils.GetAnyTree();
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => Array.Empty<TextSpanReplaceInfo>(), null);
             Assert.Equal(tree1, tree2);
         }
@@ -111,7 +111,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [Fact]
         public void ReplaceTextSpans_WhenEmptyModifications_TreeIsPreserved()
         {
-            var tree1 = BBCodeTestUtil.GetAnyTree();
+            var tree1 = TestUtils.GetAnyTree();
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => new[] { new TextSpanReplaceInfo(0, 0, null), }, null);
             Assert.Equal(tree1.ToBBCode(), tree2?.ToBBCode());
         }
@@ -119,7 +119,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [Fact]
         public void ReplaceTextSpans_WhenEverythingIsConvertedToX_OutputContainsOnlyX_CheckedWithContains()
         {
-            var tree1 = BBCodeTestUtil.GetAnyTree();
+            var tree1 = TestUtils.GetAnyTree();
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => new[] { new TextSpanReplaceInfo(0, txt.Length, new TextNode("x")), }, null);
             Assert.Equal(false, tree2?.ToBBCode().Contains('a'));
         }
@@ -127,7 +127,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [Fact]
         public void ReplaceTextSpans_WhenEverythingIsConvertedToX_OutputContainsOnlyX_CheckedWithTreeWalk()
         {
-            var tree1 = BBCodeTestUtil.GetAnyTree();
+            var tree1 = TestUtils.GetAnyTree();
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => new[] { new TextSpanReplaceInfo(0, txt.Length, new TextNode("x")), }, null);
             new TextAssertVisitor(str => Assert.True(str == "x")).Visit(tree2);
         }
@@ -137,7 +137,7 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             for (int i = 0; i < RandomValue.Int(100, 10); i++)
             {
-                var tree1 = BBCodeTestUtil.GetAnyTree();
+                var tree1 = TestUtils.GetAnyTree();
                 var chosenTexts = new List<string>();
                 var tree2 = BBCode.ReplaceTextSpans(tree1, txt =>
                     {
@@ -172,7 +172,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [InlineData("474h4gfs", "[quote=\"someone\":474h4gfs]some text[/quote:474h4gfs]", "<blockquote class=\"PostQuote\"><b>someone</b> wrote:<br/>some text</blockquote>")]
         public void BbcodeUid_IsHandled(string uid, string text, string expectedHtml)
         {
-            Assert.Equal(expectedHtml, HttpUtility.HtmlDecode(BBCodeTestUtil.GetCustomParser().ToHtml(text, uid)));
+            Assert.Equal(expectedHtml, HttpUtility.HtmlDecode(TestUtils.GetCustomParser().ToHtml(text, uid)));
         }
 
         [Theory]
@@ -183,7 +183,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [InlineData("474h4gfs", "[quote=\"someone\":474h4gfs][quote=\"someone else\":474h4gfs]some nested text[/quote:474h4gfs][/quote:474h4gfs]", "<blockquote class=\"PostQuote\"><b>someone</b> wrote:<br/><blockquote class=\"PostQuote\"><b>someone else</b> wrote:<br/>some nested text</blockquote></blockquote>")]
         public void BbcodeUid_WhenNested_IsHandled(string uid, string text, string expectedHtml)
         {
-            Assert.Equal(expectedHtml, HttpUtility.HtmlDecode(BBCodeTestUtil.GetCustomParser().ToHtml(text, uid)));
+            Assert.Equal(expectedHtml, HttpUtility.HtmlDecode(TestUtils.GetCustomParser().ToHtml(text, uid)));
         }
 
         [Theory]
@@ -192,7 +192,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [InlineData(@"one\[two\]three", @"one[two]three")]
         public void EscapingChars_IsCorrect(string input, string expected)
         {
-            Assert.Equal(expected, HttpUtility.HtmlDecode(BBCodeTestUtil.GetCustomParser().ToHtml(input)));
+            Assert.Equal(expected, HttpUtility.HtmlDecode(TestUtils.GetCustomParser().ToHtml(input)));
         }
 
 

@@ -139,7 +139,7 @@ namespace CodeKicker.BBCode.Core
             int end = pos;
             var tagEnd = ParseTagEnd(bbCode, code, ref end, preserveWhitespace);
 
-            if (!(tagEnd?.Equals("code", StringComparison.InvariantCultureIgnoreCase) ?? false) && (openingNode?.Tag?.Name?.Equals("code", StringComparison.InvariantCultureIgnoreCase) ?? false))
+            if (tagEnd?.Equals("code", StringComparison.InvariantCultureIgnoreCase) != true && openingNode?.Tag?.Name?.Equals("code", StringComparison.InvariantCultureIgnoreCase) == true)
             {
                 //we are inside a [code] tag that contains BBCode. The inner code is supposed to be displayed 'as is', and thus we do not parse it
                 return false;
