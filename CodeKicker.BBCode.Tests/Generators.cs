@@ -1,4 +1,5 @@
-﻿using FsCheck;
+﻿using CodeKicker.BBCode.Core.SyntaxTree;
+using FsCheck;
 
 namespace CodeKicker.BBCode.Core.Tests
 {

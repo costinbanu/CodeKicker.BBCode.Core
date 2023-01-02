@@ -148,9 +148,11 @@ namespace CodeKicker.BBCode.Core.Tests
             }
         }
 
-        public static SequenceNode GetAnyTree()
+        public static SequenceNode GetAnyTree(ErrorMode? errorMode = null, BBTagClosingStyle? bbTagClosingStyle = null)
         {
-            var parser = GetParserForTest(RandomValue.Object<ErrorMode>(), true, RandomValue.Object<BBTagClosingStyle>(), false);
+            errorMode ??= RandomValue.Object<ErrorMode>();
+            bbTagClosingStyle ??= RandomValue.Object<BBTagClosingStyle>();
+            var parser = GetParserForTest(errorMode.Value, true, bbTagClosingStyle.Value, false);
             return CreateRootNode(parser.Tags.ToArray());
         }
 

@@ -1,4 +1,5 @@
 ﻿using CodeKicker.BBCode.Core.SyntaxTree;
+using FsCheck.Xunit;
 using RandomTestValues;
 using System;
 using System.Collections.Generic;
@@ -9,11 +10,11 @@ using Xunit.Abstractions;
 
 namespace CodeKicker.BBCode.Core.Tests
 {
-    public partial class BBCodeTest
+    public partial class BBCodeTests
     {
         private readonly ITestOutputHelper _output;
 
-        public BBCodeTest(ITestOutputHelper output)
+        public BBCodeTests(ITestOutputHelper output)
         {
             _output = output;
         }
@@ -49,7 +50,7 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             var escaped = BBCode.EscapeText(text);
 
-            var ast = GetSimpleParser().ParseSyntaxTree(escaped);
+            var ast = new BBCodeParser(new List<BBTag>()).ParseSyntaxTree(escaped);
 
             if (text.Length == 0)
                 Assert.Equal(0, ast.SubNodes.Count);
@@ -61,14 +62,9 @@ namespace CodeKicker.BBCode.Core.Tests
         public void Escape_Parse_ToText_Roundtrip(string text)
         {
             var escaped = BBCode.EscapeText(text);
-            var unescaped = GetSimpleParser().ParseSyntaxTree(escaped);
+            var unescaped = new BBCodeParser(new List<BBTag>()).ParseSyntaxTree(escaped);
             var text2 = unescaped.ToText();
             Assert.Equal(text, text2);
-        }
-
-        static BBCodeParser GetSimpleParser()
-        {
-            return new BBCodeParser(new List<BBTag>());
         }
 
         [Fact]
@@ -91,75 +87,84 @@ namespace CodeKicker.BBCode.Core.Tests
                     _ => null
                 },
                 tagNode => tagNode.Tag.Name != "i");
+
+            static void ReplaceTextSpans_ManualTestCases_TestCase(string bbCode, string expected, Func<string, IList<TextSpanReplaceInfo>?>? getTextSpansToReplace, Func<TagNode, bool>? tagFilter)
+            {
+                var tree1 = TestUtils.GetParserForTest(ErrorMode.Strict, false, BBTagClosingStyle.AutoCloseElement, false).ParseSyntaxTree(bbCode);
+                var tree2 = BBCode.ReplaceTextSpans(tree1, getTextSpansToReplace ?? (txt => Array.Empty<TextSpanReplaceInfo>()), tagFilter);
+                Assert.Equal(expected, tree2!.ToBBCode());
+            }
         }
 
-        static void ReplaceTextSpans_ManualTestCases_TestCase(string bbCode, string expected, Func<string, IList<TextSpanReplaceInfo>?>? getTextSpansToReplace, Func<TagNode, bool>? tagFilter)
+        [Property]
+        public void ReplaceTextSpans_WhenNoModifications_TreeIsPreserved(ErrorMode errorMode, BBTagClosingStyle bbTagClosingStyle)
         {
-            var tree1 = TestUtils.GetParserForTest(ErrorMode.Strict, false, BBTagClosingStyle.AutoCloseElement, false).ParseSyntaxTree(bbCode);
-            var tree2 = BBCode.ReplaceTextSpans(tree1, getTextSpansToReplace ?? (txt => Array.Empty<TextSpanReplaceInfo>()), tagFilter);
-            Assert.Equal(expected, tree2!.ToBBCode());
-        }
-
-        [Fact]
-        public void ReplaceTextSpans_WhenNoModifications_TreeIsPreserved()
-        {
-            var tree1 = TestUtils.GetAnyTree();
+            var tree1 = TestUtils.GetAnyTree(errorMode, bbTagClosingStyle);
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => Array.Empty<TextSpanReplaceInfo>(), null);
             Assert.Equal(tree1, tree2);
         }
 
-        [Fact]
-        public void ReplaceTextSpans_WhenEmptyModifications_TreeIsPreserved()
+        [Property]
+        public void ReplaceTextSpans_WhenEmptyModifications_TreeIsPreserved(ErrorMode errorMode, BBTagClosingStyle bbTagClosingStyle)
         {
-            var tree1 = TestUtils.GetAnyTree();
+            var tree1 = TestUtils.GetAnyTree(errorMode, bbTagClosingStyle);
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => new[] { new TextSpanReplaceInfo(0, 0, null), }, null);
             Assert.Equal(tree1.ToBBCode(), tree2?.ToBBCode());
         }
 
-        [Fact]
-        public void ReplaceTextSpans_WhenEverythingIsConvertedToX_OutputContainsOnlyX_CheckedWithContains()
+        [Property]
+        public void ReplaceTextSpans_WhenEverythingIsConvertedToX_OutputContainsOnlyX_CheckedWithContains(ErrorMode errorMode, BBTagClosingStyle bbTagClosingStyle)
         {
-            var tree1 = TestUtils.GetAnyTree();
+            var tree1 = TestUtils.GetAnyTree(errorMode, bbTagClosingStyle);
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => new[] { new TextSpanReplaceInfo(0, txt.Length, new TextNode("x")), }, null);
-            Assert.Equal(false, tree2?.ToBBCode().Contains('a'));
+            if (tree1.SubNodes.Count == 0)
+            {
+                Assert.Equal(0, tree2?.SubNodes.Count ?? 0);
+            }
+            else
+            {
+                Assert.Contains('x', tree2?.ToBBCode() ?? string.Empty);
+            }
         }
 
-        [Fact]
-        public void ReplaceTextSpans_WhenEverythingIsConvertedToX_OutputContainsOnlyX_CheckedWithTreeWalk()
+        [Property]
+        public void ReplaceTextSpans_WhenEverythingIsConvertedToX_OutputContainsOnlyX_CheckedWithTreeWalk(ErrorMode errorMode, BBTagClosingStyle bbTagClosingStyle)
         {
-            var tree1 = TestUtils.GetAnyTree();
+            var tree1 = TestUtils.GetAnyTree(errorMode, bbTagClosingStyle);
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => new[] { new TextSpanReplaceInfo(0, txt.Length, new TextNode("x")), }, null);
-            new TextAssertVisitor(str => Assert.True(str == "x")).Visit(tree2);
+            var visitor = new TextAssertVisitor(str => Assert.True(str == "x"));
+            visitor.Visit(tree2);
+            Assert.Equal(tree1.SubNodes.Count > 0, visitor.AssertPerformed);
         }
 
-        [Fact]
-        public void ReplaceTextSpans_ArbitraryTextSpans_NoCrash()
+        [Property]
+        public void ReplaceTextSpans_ArbitraryTextSpans_NoCrash(ErrorMode errorMode, BBTagClosingStyle bbTagClosingStyle)
         {
             for (int i = 0; i < RandomValue.Int(100, 10); i++)
             {
-                var tree1 = TestUtils.GetAnyTree();
+                var tree1 = TestUtils.GetAnyTree(errorMode, bbTagClosingStyle);
                 var chosenTexts = new List<string>();
                 var tree2 = BBCode.ReplaceTextSpans(tree1, txt =>
+                {
+                    var count = RandomValue.Int(3, 0);
+                    var indexes = new List<int>();
+                    for (int i = 0; i < count; i++)
                     {
-                        var count = RandomValue.Int(3, 0);
-                        var indexes = new List<int>();
-                        for (int i = 0; i < count; i++)
-                        {
-                            indexes.Add(RandomValue.Int(txt.Length, 0));
-                        }
-                        indexes.Sort();
-                        _output.WriteLine(string.Join(", ", indexes));
-                        return
-                            Enumerable.Range(0, count)
-                                .Select(i =>
-                                    {
-                                        var maxIndex = i == count - 1 ? txt.Length : indexes[i + 1];
-                                        var text = RandomValue.String();
-                                        chosenTexts.Add(text);
-                                        return new TextSpanReplaceInfo(indexes[i], RandomValue.Int(indexes[i] - maxIndex + 1, 0), new TextNode(text));
-                                    })
-                                .ToArray();
-                    }, null);
+                        indexes.Add(RandomValue.Int(txt.Length, 0));
+                    }
+                    indexes.Sort();
+                    _output.WriteLine(string.Join(", ", indexes));
+                    return
+                        Enumerable.Range(0, count)
+                            .Select(i =>
+                                {
+                                    var maxIndex = i == count - 1 ? txt.Length : indexes[i + 1];
+                                    var text = RandomValue.String();
+                                    chosenTexts.Add(text);
+                                    return new TextSpanReplaceInfo(indexes[i], RandomValue.Int(indexes[i] - maxIndex + 1, 0), new TextNode(text));
+                                })
+                            .ToArray();
+                }, null);
                 var bbCode = tree2?.ToBBCode();
                 Assert.All(chosenTexts, s => Assert.Contains(s, bbCode));
             }
@@ -199,6 +204,7 @@ namespace CodeKicker.BBCode.Core.Tests
         class TextAssertVisitor : SyntaxTreeVisitor
         {
             readonly Action<string?> assertFunction;
+            public bool AssertPerformed { get; private set; }
 
             public TextAssertVisitor(Action<string?> assertFunction)
             {
@@ -208,6 +214,7 @@ namespace CodeKicker.BBCode.Core.Tests
             protected override SyntaxTreeNode? Visit(TextNode? node)
             {
                 assertFunction(node?.Text);
+                AssertPerformed = true;
                 return node;
             }
         }
