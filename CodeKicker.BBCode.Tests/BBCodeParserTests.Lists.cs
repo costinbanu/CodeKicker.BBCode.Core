@@ -20,9 +20,9 @@ namespace CodeKicker.BBCode.Core.Tests
             {
                 var bbcodes = new List<BBTag>
             {
-                new BBTag("*", "<li>", "</li>", true, BBTagClosingStyle.AutoCloseElement, x => x, true, 20),
-                new BBTag("list", "<${attr}>", "</${attr}>", true, true, 9, "", true,
-                    new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\""))
+                new BBTag("*", "<li>", "</li>", 20, autoRenderContent: true, BBTagClosingStyle.AutoCloseElement, x => x, enableIterationElementBehavior: true),
+                new BBTag("list", "<${attr}>", "</${attr}>", autoRenderContent: true, requireClosingTag: true, 9, bbcodeUid: "", allowUrlProcessingAsText: true,
+                    attributes : new[] { new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\"") })
             };
                 var parser = new BBCodeParser(bbcodes);
                 Assert.Equal(expected, parser.ToHtml(input));
@@ -81,9 +81,9 @@ namespace CodeKicker.BBCode.Core.Tests
             {
                 var parser = new BBCodeParser(new List<BBTag>
             {
-                    new BBTag("*", "<li>", "</li>", true, BBTagClosingStyle.AutoCloseElement, null, true, 20),
-                    new BBTag("list", "<${attr}>", "</${attr}>", true, BBTagClosingStyle.RequiresClosingTag, null, 9, "", true,
-                        new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\""))
+                    new BBTag("*", "<li>", "</li>", 20, autoRenderContent: true, BBTagClosingStyle.AutoCloseElement, contentTransformer: null, enableIterationElementBehavior: true),
+                    new BBTag("list", "<${attr}>", "</${attr}>", autoRenderContent: true, BBTagClosingStyle.RequiresClosingTag, null, 9, "", allowUrlProcessingAsText: true,
+                        attributes: new[] {new BBAttribute("attr", "", a => string.IsNullOrWhiteSpace(a.AttributeValue) ? "ul" : $"ol type=\"{a.AttributeValue}\"") })
             });
                 Assert.Equal(html, HttpUtility.HtmlDecode(parser.ToHtml(bbcode)));
             }

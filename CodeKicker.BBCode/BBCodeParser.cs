@@ -82,7 +82,7 @@ namespace CodeKicker.BBCode.Core
             try
             {
                 var actualUid = string.IsNullOrWhiteSpace(uid) ? ToBase36(Math.Abs(Convert.ToInt64($"0x{Guid.NewGuid().ToString("n").Substring(4, 16)}", 16))).Substring(0, uidLength) : uid;
-                var dummyParser = new BBCodeParser(ErrorMode.TryErrorCorrection, null, Tags.Select(x => new BBTag(x.Name, x.OpenTagTemplate, x.CloseTagTemplate, x.AutoRenderContent, x.TagClosingStyle, x.ContentTransformer, x.EnableIterationElementBehavior, x.Id, actualUid, x.AllowUrlProcessingAsText, x.Attributes)).ToList());
+                var dummyParser = new BBCodeParser(ErrorMode.TryErrorCorrection, null, Tags.Select(x => new BBTag(x.Name, x.OpenTagTemplate, x.CloseTagTemplate, x.Id, x.AutoRenderContent, x.TagClosingStyle, x.ContentTransformer, x.EnableIterationElementBehavior, actualUid, x.AllowUrlProcessingAsText, x.AllowChildren, x.Attributes)).ToList());
                 var (node, bitfield) = dummyParser.ParseSyntaxTreeImpl(text, true, true, uid, false);
                 return (node.ToLegacyBBCode(), actualUid, bitfield?.GetBase64());
             }
@@ -139,7 +139,7 @@ namespace CodeKicker.BBCode.Core
             int end = pos;
             var tagEnd = ParseTagEnd(bbCode, code, ref end, preserveWhitespace);
 
-            if (tagEnd?.Equals("code", StringComparison.InvariantCultureIgnoreCase) != true && openingNode?.Tag?.Name?.Equals("code", StringComparison.InvariantCultureIgnoreCase) == true)
+            if (tagEnd?.Equals(openingNode?.Tag.Name, StringComparison.InvariantCultureIgnoreCase) != true && openingNode?.Tag?.AllowChildren == false)
             {
                 //we are inside a [code] tag that contains BBCode. The inner code is supposed to be displayed 'as is', and thus we do not parse it
                 return false;
@@ -181,7 +181,7 @@ namespace CodeKicker.BBCode.Core
         }
         bool MatchStartTag(string bbCode, string code, ref int pos, Stack<SyntaxTreeNode> stack, bool preserveWhitespace)
         {
-            if (stack.OfType<TagNode>().Any(n => n.Tag.Name.Equals("code", StringComparison.InvariantCultureIgnoreCase)))
+            if (stack.OfType<TagNode>().Any(n => !n.Tag.AllowChildren))
             {
                 //we are inside a [code] tag that contains BBCode. The inner code is supposed to be displayed 'as is', and thus we do not parse it
                 return false;

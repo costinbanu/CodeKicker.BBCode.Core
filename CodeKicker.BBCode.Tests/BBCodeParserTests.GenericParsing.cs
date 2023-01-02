@@ -52,9 +52,9 @@ namespace CodeKicker.BBCode.Core.Tests
             {
                 var parser = new BBCodeParser(ErrorMode.Strict, null, new[]
                 {
-                    new BBTag("font", "<span style=\"${color}${font}\">", "</span>", true, true, 1, "", true,
+                    new BBTag("font", "<span style=\"${color}${font}\">", "</span>", autoRenderContent: true, requireClosingTag: true, 1, "", allowUrlProcessingAsText: true, attributes: new[] {
                         new BBAttribute("color", "color", attributeRenderingContext => string.IsNullOrEmpty(attributeRenderingContext.AttributeValue) ? "" : "color:" + attributeRenderingContext.AttributeValue + ";"),
-                        new BBAttribute("font", "font", attributeRenderingContext => string.IsNullOrEmpty(attributeRenderingContext.AttributeValue) ? "" : "font-family:" + attributeRenderingContext.AttributeValue + ";")),
+                        new BBAttribute("font", "font", attributeRenderingContext => string.IsNullOrEmpty(attributeRenderingContext.AttributeValue) ? "" : "font-family:" + attributeRenderingContext.AttributeValue + ";") }),
                 });
 
                 Assert.Equal(expected, parser.ToHtml(actual));
@@ -239,7 +239,7 @@ namespace CodeKicker.BBCode.Core.Tests
             [Fact]
             public void GreedyAttributeProcessing_ConsumesAllTokensForAttributeValue()
             {
-                var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("quote", "<div><span>Posted by ${name}</span>", "</div>", 1, "", true, new BBAttribute("name", "")) { GreedyAttributeProcessing = true } });
+                var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("quote", "<div><span>Posted by ${name}</span>", "</div>", 1, "", allowUrlProcessingAsText: true, attributes: new[] { new BBAttribute("name", "") }) { GreedyAttributeProcessing = true } });
 
                 var input = "[quote=Test User With Spaces]Here is my comment[/quote]";
                 var expected = "<div><span>Posted by Test User With Spaces</span>Here is my comment</div>";

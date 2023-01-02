@@ -17,7 +17,7 @@ namespace CodeKicker.BBCode.Core.Tests
             [Fact]
             public void Url_IsCorrect()
             {
-                Assert.Equal("<a href=\"http://example.org/path?name=value\">text</a>", TestUtils.BBEncodeForTest("[url=http://example.org/path?name=value]text[/url]", ErrorMode.Strict));
+                Assert.Equal("<a href=\"http://example.org/path?name=value\" target=\"_blank\">text</a>", _parser.ToHtml("[url=http://example.org/path?name=value]text[/url]"));
             }
 
             [Theory]
