@@ -5,7 +5,7 @@
 
   <PropertyGroup>
     <PackageId>CodeKicker.BBCode.Core</PackageId>
-    <Version>4.0.0-preview.1</Version>
+    <Version>4.0.0</Version>
     <Authors>Costin Banu</Authors>
     <Description>A .NET Core compatible fork of CodeKicker.BBCode with extra features and backwards compatibility support</Description>
     <PackageProjectUrl>https://github.com/costinbanu/CodeKicker.BBCode.Core</PackageProjectUrl>

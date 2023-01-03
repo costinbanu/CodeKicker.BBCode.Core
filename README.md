@@ -15,5 +15,7 @@ This is a fork of the [original modification repository](https://github.com/Pabl
 ## Usage
 Install the [NuGet package](https://www.nuget.org/packages/CodeKicker.BBCode.Core/)
 
+This project is used in [PhpbbInDotNet](https://github.com/costinbanu/PhpbbInDotnet).
+
 ## License
 Both the original project and the modification repo are licensed under the MIT license, thus my changes are released under the same terms.
