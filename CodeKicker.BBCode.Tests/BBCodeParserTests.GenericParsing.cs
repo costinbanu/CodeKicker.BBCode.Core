@@ -228,7 +228,7 @@ namespace CodeKicker.BBCode.Core.Tests
             [Fact]
             public void StopProcessingDirective_StopsParserProcessingTagLikeText_UntilClosingTag()
             {
-                var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>", 1) { StopProcessing = true } });
+                var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>", 1) });
 
                 var input = "[code][i]This should [u]be a[/u] text literal[/i][/code]";
                 var expected = "<pre>[i]This should [u]be a[/u] text literal[/i]</pre>";
@@ -239,7 +239,7 @@ namespace CodeKicker.BBCode.Core.Tests
             [Fact]
             public void GreedyAttributeProcessing_ConsumesAllTokensForAttributeValue()
             {
-                var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("quote", "<div><span>Posted by ${name}</span>", "</div>", 1, bbcodeUid: "", allowUrlProcessingAsText: true, attributes: new[] { new BBAttribute("name", "") }) { GreedyAttributeProcessing = true } });
+                var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("quote", "<div><span>Posted by ${name}</span>", "</div>", 1, bbcodeUid: "", allowUrlProcessingAsText: true, greedyAttributeProcessing: true, attributes: new[] { new BBAttribute("name", "") }) });
 
                 var input = "[quote=Test User With Spaces]Here is my comment[/quote]";
                 var expected = "<div><span>Posted by Test User With Spaces</span>Here is my comment</div>";

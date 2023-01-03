@@ -82,7 +82,7 @@ namespace CodeKicker.BBCode.Core
             try
             {
                 var actualUid = string.IsNullOrWhiteSpace(uid) ? ToBase36(Math.Abs(Convert.ToInt64($"0x{Guid.NewGuid().ToString("n").Substring(4, 16)}", 16))).Substring(0, uidLength) : uid;
-                var dummyParser = new BBCodeParser(ErrorMode.TryErrorCorrection, null, Tags.Select(x => new BBTag(x.Name, x.OpenTagTemplate, x.CloseTagTemplate, x.Id, x.AutoRenderContent, x.TagClosingStyle, x.ContentTransformer, x.EnableIterationElementBehavior, actualUid, x.AllowUrlProcessingAsText, x.AllowChildren, x.Attributes)).ToList());
+                var dummyParser = new BBCodeParser(ErrorMode.TryErrorCorrection, null, Tags.Select(x => new BBTag(x.Name, x.OpenTagTemplate, x.CloseTagTemplate, x.Id, x.AutoRenderContent, x.TagClosingStyle, x.ContentTransformer, x.EnableIterationElementBehavior, actualUid, x.GreedyAttributeProcessing, x.SuppressFirstNewlineAfter, x.AllowUrlProcessingAsText, x.AllowChildren, x.Attributes)).ToList());
                 var (node, bitfield) = dummyParser.ParseSyntaxTreeImpl(text, true, true, uid, false);
                 return (node.ToLegacyBBCode(), actualUid, bitfield?.GetBase64());
             }
@@ -141,7 +141,6 @@ namespace CodeKicker.BBCode.Core
 
             if (tagEnd?.Equals(openingNode?.Tag.Name, StringComparison.InvariantCultureIgnoreCase) != true && openingNode?.Tag?.AllowChildren == false)
             {
-                //we are inside a [code] tag that contains BBCode. The inner code is supposed to be displayed 'as is', and thus we do not parse it
                 return false;
             }
 
@@ -183,7 +182,6 @@ namespace CodeKicker.BBCode.Core
         {
             if (stack.OfType<TagNode>().Any(n => !n.Tag.AllowChildren))
             {
-                //we are inside a [code] tag that contains BBCode. The inner code is supposed to be displayed 'as is', and thus we do not parse it
                 return false;
             }
 
@@ -292,8 +290,7 @@ namespace CodeKicker.BBCode.Core
             var defaultAttrValue = ParseAttributeValue(input, code, ref end, tag!.GreedyAttributeProcessing);
             if (defaultAttrValue is not null)
             {
-                var attr = tag.FindAttribute("");
-                if (attr is null && ErrorOrReturn("UnknownAttribute", tag.Name, "\"Default Attribute\"")) return null;
+                if (!tag.FindAttribute("", out var attr) && ErrorOrReturn("UnknownAttribute", tag.Name, "\"Default Attribute\"")) return null;
                 result.AttributeValues.Add(attr!, defaultAttrValue);
             }
 
@@ -306,8 +303,7 @@ namespace CodeKicker.BBCode.Core
                 var attrVal = ParseAttributeValue(input, code, ref end);
                 if (attrVal is null && ErrorOrReturn("")) return null;
 
-                if (tag.Attributes is null && ErrorOrReturn("UnknownTag", tag.Name)) return null;
-                var attr = tag.FindAttribute(attrName);
+                if (!tag.FindAttribute(attrName, out var attr) && ErrorOrReturn("UnknownTag", tag.Name)) return null;
                 if (attr is null && ErrorOrReturn("UnknownTag", tag.Name, attrName)) return null;
 
                 if (result.AttributeValues.ContainsKey(attr!) && ErrorOrReturn("DuplicateAttribute", tagName, attrName)) return null;

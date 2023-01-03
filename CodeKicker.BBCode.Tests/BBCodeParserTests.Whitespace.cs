@@ -39,7 +39,7 @@ namespace CodeKicker.BBCode.Core.Tests
             [Fact]
             public void SuppressFirstNewlineAfter_StopsFirstNewlineAfterClosingTag()
             {
-                var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>", 1) { SuppressFirstNewlineAfter = true } });
+                var parser = new BBCodeParser(ErrorMode.ErrorFree, null, new[] { new BBTag("code", "<pre>", "</pre>", 1, suppressFirstNewlineAfter: true) });
 
                 var input = "[code]Here is some code[/code]\nMore text!";
                 var expected = "<pre>Here is some code</pre>More text!"; // No newline after the closing PRE
