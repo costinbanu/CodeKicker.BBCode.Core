@@ -40,8 +40,7 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             var content = string.Concat(SubNodes.Select(s => s.ToBBCode()).ToArray());
 
             var attrs = "";
-            var defAttr = Tag.FindAttribute("");
-            if (defAttr is not null)
+            if (Tag.FindAttribute("", out var defAttr))
             {
                 if (AttributeValues.ContainsKey(defAttr))
                     attrs += "=" + AttributeValues[defAttr];
@@ -58,9 +57,8 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             var content = string.Concat(SubNodes.Select(s => s.ToLegacyBBCode()).ToArray());
 
             var attrs = "";
-            var defAttr = Tag.FindAttribute("");
             var attachFlag = "";
-            if (defAttr is not null && AttributeValues.ContainsKey(defAttr))
+            if (Tag.FindAttribute("", out var defAttr) && AttributeValues.ContainsKey(defAttr))
             {
                 attrs += "=" + AttributeValues[defAttr];
             }
