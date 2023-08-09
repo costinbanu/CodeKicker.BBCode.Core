@@ -36,14 +36,14 @@ namespace CodeKicker.BBCode.Core
         private static readonly Regex _urlAllowedCharsRegex = new(@$"[a-z0-9\u00a1-\uffff{Regex.Escape(nonAlphaNumericUrlChars).Replace("-", @"\-")}]", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled, TimeSpan.FromSeconds(20));
         private static readonly string[] _urlCandidateStartString = new[] { "https", "http", "www" };
 
-        public virtual string ToHtml(string bbCode, string code = "")
+        public virtual string ToHtml(string bbCode, string code = "", bool transformUrls = true)
         {
             if (bbCode is null) throw new ArgumentNullException(nameof(bbCode));
-            return ParseSyntaxTree(bbCode, code).ToHtml();
+            return ParseSyntaxTree(bbCode, code, transformUrls).ToHtml();
         }
 
-        public virtual SequenceNode ParseSyntaxTree(string? bbCode, string code = "")
-            => ParseSyntaxTreeImpl(bbCode, false, false, code).node;
+        public virtual SequenceNode ParseSyntaxTree(string? bbCode, string code = "", bool transformUrls = true)
+            => ParseSyntaxTreeImpl(bbCode, false, false, code, transformUrls).node;
 
         private (SequenceNode node, Bitfield? bitfield) ParseSyntaxTreeImpl(string? bbCode, bool setBitfield, bool preserveWhitespace, string code = "", bool transformUrls = true)
         {
