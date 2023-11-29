@@ -19,17 +19,17 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
         public SyntaxTreeNodeCollection(IEnumerable<SyntaxTreeNode> list)
             : base(list.ToArray())
         {
-            if (list is null) throw new ArgumentNullException(nameof(list));
+            if(list is null) throw new ArgumentNullException(nameof(list));
         }
 
         protected override void SetItem(int index, SyntaxTreeNode item)
         {
-            if (item is null) throw new ArgumentNullException(nameof(item));
+            if(item is null) throw new ArgumentNullException(nameof(item));
             base.SetItem(index, item);
         }
         protected override void InsertItem(int index, SyntaxTreeNode item)
         {
-            if (item is null) throw new ArgumentNullException(nameof(item));
+            if(item is null) throw new ArgumentNullException(nameof(item));
             base.InsertItem(index, item);
         }
     }
@@ -39,17 +39,21 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
         public ImmutableSyntaxTreeNodeCollection(IEnumerable<SyntaxTreeNode> list)
             : base(list.ToArray())
         {
-            if (list is null) throw new ArgumentNullException(nameof(list));
+            if(list is null) throw new ArgumentNullException(nameof(list));
         }
         internal ImmutableSyntaxTreeNodeCollection(IList<SyntaxTreeNode> list, bool isFresh)
             : base(isFresh ? list : list.ToArray())
         {
         }
-
+#if NET8_0_OR_GREATER
+#else
         static readonly ImmutableSyntaxTreeNodeCollection empty = new(Array.Empty<SyntaxTreeNode>(), true);
         public static ImmutableSyntaxTreeNodeCollection Empty
         {
+
             get { return empty; }
         }
+
+#endif
     }
 }
