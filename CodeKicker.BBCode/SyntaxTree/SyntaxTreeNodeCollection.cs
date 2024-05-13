@@ -45,11 +45,5 @@ namespace CodeKicker.BBCode.Core.SyntaxTree
             : base(isFresh ? list : list.ToArray())
         {
         }
-
-        static readonly ImmutableSyntaxTreeNodeCollection empty = new(Array.Empty<SyntaxTreeNode>(), true);
-        public static ImmutableSyntaxTreeNodeCollection Empty
-        {
-            get { return empty; }
-        }
     }
 }
