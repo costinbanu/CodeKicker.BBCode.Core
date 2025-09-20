@@ -26,7 +26,7 @@ namespace CodeKicker.BBCode.Core.Tests
             {
                 BBCode.ToHtml(RandomValue.String());
             }
-            catch (BBCodeParsingException)
+            catch(BBCodeParsingException)
             {
             }
         }
@@ -52,8 +52,8 @@ namespace CodeKicker.BBCode.Core.Tests
 
             var ast = new BBCodeParser(new List<BBTag>()).ParseSyntaxTree(escaped);
 
-            if (text.Length == 0)
-                Assert.Equal(0, ast.SubNodes.Count);
+            if(text.Length == 0)
+                Assert.Empty(ast.SubNodes);
             else
                 Assert.Equal(text, ((TextNode)ast.SubNodes.Single()).Text);
         }
@@ -117,7 +117,7 @@ namespace CodeKicker.BBCode.Core.Tests
         {
             var tree1 = TestUtils.GetAnyTree(errorMode, bbTagClosingStyle);
             var tree2 = BBCode.ReplaceTextSpans(tree1, txt => new[] { new TextSpanReplaceInfo(0, txt.Length, new TextNode("x")), }, null);
-            if (tree1.SubNodes.Count == 0)
+            if(tree1.SubNodes.Count == 0)
             {
                 Assert.Equal(0, tree2?.SubNodes.Count ?? 0);
             }
@@ -140,7 +140,7 @@ namespace CodeKicker.BBCode.Core.Tests
         [Property]
         public void ReplaceTextSpans_ArbitraryTextSpans_NoCrash(ErrorMode errorMode, BBTagClosingStyle bbTagClosingStyle)
         {
-            for (int i = 0; i < RandomValue.Int(100, 10); i++)
+            for(int i = 0; i < RandomValue.Int(100, 10); i++)
             {
                 var tree1 = TestUtils.GetAnyTree(errorMode, bbTagClosingStyle);
                 var chosenTexts = new List<string>();
@@ -148,7 +148,7 @@ namespace CodeKicker.BBCode.Core.Tests
                 {
                     var count = RandomValue.Int(3, 0);
                     var indexes = new List<int>();
-                    for (int i = 0; i < count; i++)
+                    for(int i = 0; i < count; i++)
                     {
                         indexes.Add(RandomValue.Int(txt.Length, 0));
                     }
