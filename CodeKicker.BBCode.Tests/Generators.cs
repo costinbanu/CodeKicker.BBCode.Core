@@ -1,5 +1,6 @@
 ﻿using CodeKicker.BBCode.Core.SyntaxTree;
 using FsCheck;
+using FsCheck.Fluent;
 
 namespace CodeKicker.BBCode.Core.Tests
 {
@@ -8,7 +9,7 @@ namespace CodeKicker.BBCode.Core.Tests
         public static class NoNewLineString
         {
             public static Arbitrary<string> NoNewLine()
-                => Arb.Default.String().Filter(s => s?.Contains('\n') != true);
+                => ArbMap.Default.ArbFor<string>().Filter(s => s?.Contains('\n') != true);
         }
     }
 }

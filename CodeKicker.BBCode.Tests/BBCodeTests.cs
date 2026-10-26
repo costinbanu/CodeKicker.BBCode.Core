@@ -53,7 +53,7 @@ namespace CodeKicker.BBCode.Core.Tests
             var ast = new BBCodeParser(new List<BBTag>()).ParseSyntaxTree(escaped);
 
             if (text.Length == 0)
-                Assert.Equal(0, ast.SubNodes.Count);
+                Assert.Empty(ast.SubNodes);
             else
                 Assert.Equal(text, ((TextNode)ast.SubNodes.Single()).Text);
         }
